@@ -1,0 +1,20 @@
+title Sign Up Sequence Diagram
+
+User->>App: Enters email and password
+App->>API Gateway: Send POST request to /auth/signUp endpoint with { email, password } body
+API Gateway->>Lambda: Invoke signUp Lambda function triggered by API Gateway
+Lambda->>DynamoDB: Add new user { email, passwordHash }
+DynamoDB-->>Lambda: Return operation result (success or failure)
+    alt Operation succeeded
+        Lambda-->>API Gateway: Return 201 {"success":"User created"}
+        API Gateway-->>App:  Return 201 {"success":"User created"}
+        App-->>User: Show success message "Account created successfully"
+    else Email already exists
+        Lambda-->>API Gateway: Return 409 {"error":"Email already in use"}
+        API Gateway-->>App: Return 409 {"error":"Email already in use"}
+        App-->>User: Show error "Email already registered"
+    else Database or internal error
+        Lambda-->>API Gateway: Return 500 {"error":"Internal error"}
+        API Gateway-->>App: Return 500 {"error":"Internal error"}
+        App-->>User: Show error "Something went wrong. Please try again later."
+    end

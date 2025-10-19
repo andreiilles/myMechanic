@@ -1,0 +1,21 @@
+title Sign In Sequence Diagram
+
+    User->>App: Enters email and password
+    App->>API Gateway: Send a POST request to /auth/signIn endpoint with { email, password } boby
+    API Gateway->>Lambda: Invoke signIn Lambda function triggered by API Gateway
+    Lambda->>DynamoDB: Get user by email \n
+    DynamoDB-->>Lambda: Return user record (or none)
+
+    alt Credentials valid & account active
+        Lambda-->>API Gateway: Return 200 { "success": {return all user data} }
+        API Gateway-->>App: Return 200 { "success": {return all user data} 
+        App-->>User: Show "Signed in successfully"
+    else Email not found or wrong password
+        Lambda-->>API Gateway: Return 401 {"error":"INVALID_CREDENTIALS"}
+        API Gateway-->>App: Return 401 {"error":"INVALID_CREDENTIALS"}
+        App-->>User: Show "Invalid email or password"
+    else Internal error
+        Lambda-->>API Gateway: Return 500 {"error":"Internal error"}
+        API Gateway-->>App: Return 500 {"error":"Internal error"}
+        App-->>User: Show "Something went wrong. Please try again later."
+    end
