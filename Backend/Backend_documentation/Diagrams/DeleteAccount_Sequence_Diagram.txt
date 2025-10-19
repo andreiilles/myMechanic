@@ -1,0 +1,21 @@
+title Delete Account Sequence Diagram
+
+    User->>App: Enters email and password
+    App->>API Gateway: Send DELETE request to /auth/deleteAccount endpoint with { email, password} body
+    API Gateway->>Lambda: Invoke Lambda function triggered by API Gateway)
+    Lambda->>DinamoDB: Delete user account
+    DinamoDB-->>Lambda: Return delete result (success or failure)
+
+    alt Deletion succeeded
+        Lambda-->>API Gateway: Return 204 { "success" :"User account deleted" })
+        API Gateway-->>App:  Return 204 { "success" :"User account deleted" })
+        App-->>User: Show "Account deleted"
+    else User not found
+        Lambda-->>API Gateway: Return 404 {"error":"USER_NOT_FOUND"}
+        API Gateway-->>App: Return 404 {"error":"USER_NOT_FOUND"}
+        App-->>User: Show "Account not found"
+    else Internal error
+        Lambda-->>API Gateway: Return 500 {"error":"Internal error"}
+        API Gateway-->>App: Return 500 {"error":"Internal error"}
+        App-->>User: Show "Something went wrong. Please try again later."
+    end
