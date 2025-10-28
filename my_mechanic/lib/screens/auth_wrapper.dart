@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import 'login_screen.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 import 'profile_setup_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -94,7 +94,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // Profile loaded successfully
         if (userProvider.currentUser != null) {
-          return const HomeScreen();
+          return const MainScreen();
         }
 
         // Profile doesn't exist - show setup screen

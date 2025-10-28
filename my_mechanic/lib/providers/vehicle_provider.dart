@@ -40,9 +40,12 @@ class VehicleProvider with ChangeNotifier {
       _clearError();
 
       final vehicleData = vehicle.copyWith(userId: userId);
+      
+      debugPrint('Adding vehicle: ${vehicleData.toJson(excludeId: true)}');
+      
       final response = await SupabaseService.client
           .from('vehicles')
-          .insert(vehicleData.toJson())
+          .insert(vehicleData.toJson(excludeId: true))
           .select()
           .single();
 
@@ -52,6 +55,7 @@ class VehicleProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _setError('Failed to add vehicle: ${e.toString()}');
+      debugPrint('Error adding vehicle: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -66,7 +70,7 @@ class VehicleProvider with ChangeNotifier {
       final updatedVehicle = vehicle.copyWith(updatedAt: DateTime.now());
       await SupabaseService.client
           .from('vehicles')
-          .update(updatedVehicle.toJson())
+          .update(updatedVehicle.toJson(excludeId: true))
           .eq('id', vehicle.id!);
 
       final index = _vehicles.indexWhere((v) => v.id == vehicle.id);

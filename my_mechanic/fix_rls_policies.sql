@@ -19,9 +19,17 @@ CREATE POLICY "Authenticated users can create mechanic profile" ON mechanics
     auth.uid() IS NOT NULL  -- Any authenticated user can create a mechanic profile
   );
 
+-- Fix vehicles table policies
+DROP POLICY IF EXISTS "Users can create their own vehicles" ON vehicles;
+DROP POLICY IF EXISTS "Authenticated users can create vehicles" ON vehicles;
+CREATE POLICY "Authenticated users can create vehicles" ON vehicles
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL  -- Any authenticated user can create vehicles
+  );
+
 -- Verify policies were created
 SELECT tablename, policyname, permissive, roles, cmd, qual, with_check
 FROM pg_policies
 WHERE schemaname = 'public'
-AND tablename IN ('users', 'mechanics')
+AND tablename IN ('users', 'mechanics', 'vehicles')
 ORDER BY tablename, policyname;

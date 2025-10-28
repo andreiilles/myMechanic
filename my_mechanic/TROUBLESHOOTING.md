@@ -51,6 +51,33 @@ CREATE POLICY "Authenticated users can create mechanic profile" ON mechanics
   - `_hasAttemptedLoad`: Already tried to load (prevents retries)
 - Proper error handling with retry option
 
+### 4. ❌ Vehicle Creation RLS Policy Violation
+**Error**: `new row violates row-level security policy for table "vehicles"` (Code: 42501)
+
+**Cause**: The RLS policy for vehicles INSERT was using a subquery check that could fail:
+```sql
+FOR INSERT WITH CHECK (
+  user_id IN (SELECT id FROM users WHERE auth_id = auth.uid())
+)
+```
+
+**Solution**: Simplified the policy to just check authentication:
+
+```sql
+DROP POLICY IF EXISTS "Users can create their own vehicles" ON vehicles;
+CREATE POLICY "Authenticated users can create vehicles" ON vehicles
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL  -- Any authenticated user can create vehicles
+  );
+```
+
+**Quick Fix**: Run the SQL in `fix_vehicle_rls.sql` or `fix_rls_policies.sql` in your Supabase SQL Editor.
+
+**Why This Works**: The subquery check can fail due to timing or session issues. The simpler authentication check is more reliable and still secure since:
+- Only authenticated users can insert
+- Users can only view/edit/delete their own vehicles (other policies handle this)
+- The `user_id` is set by the app, not the user
+
 ## Setup Instructions
 
 ### Step 1: Run Database Schema

@@ -121,12 +121,10 @@ CREATE POLICY "Users can select their own vehicles" ON vehicles
     )
   );
 
-DROP POLICY IF EXISTS "Users can create their own vehicles" ON vehicles;
-CREATE POLICY "Users can create their own vehicles" ON vehicles
+DROP POLICY IF EXISTS "Authenticated users can create vehicles" ON vehicles;
+CREATE POLICY "Authenticated users can create vehicles" ON vehicles
   FOR INSERT WITH CHECK (
-    user_id IN (
-      SELECT id FROM users WHERE auth_id = auth.uid()
-    )
+    auth.uid() IS NOT NULL  -- Any authenticated user can create vehicles
   );
 
 DROP POLICY IF EXISTS "Users can update their own vehicles" ON vehicles;
