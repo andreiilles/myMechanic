@@ -8,6 +8,8 @@ import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/vehicle_provider.dart';
 import 'screens/auth_wrapper.dart';
+import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +70,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const AuthWrapper(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/signup': (context) => const SignUpScreen(),
+        },
       ),
     );
   }

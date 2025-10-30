@@ -9,6 +9,7 @@ import '../utils/platform_utils.dart';
 import '../widgets/vehicle_card.dart';
 import '../widgets/adaptive_widgets.dart';
 import 'add_vehicle_screen.dart';
+import 'vehicle_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -239,9 +240,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToVehicleDetail(Vehicle vehicle) {
-    // TODO: Navigate to vehicle detail screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Selected ${vehicle.make} ${vehicle.model}')),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => VehicleDetailScreen(vehicle: vehicle),
+      ),
     );
   }
 

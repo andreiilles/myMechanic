@@ -82,12 +82,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    // Wait a moment for the auth session to be established
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Debug: Check auth state
+    // Check if email confirmation is required
+    // Supabase sends confirmation email automatically
     debugPrint('Auth user ID: ${authProvider.user?.id}');
     debugPrint('Auth user email: ${authProvider.user?.email}');
+    debugPrint('Email confirmed: ${authProvider.user?.emailConfirmedAt}');
+
+    // If email is not confirmed, redirect to login with message
+    if (authProvider.user?.emailConfirmedAt == null) {
+      if (mounted) {
+        // Sign out the unconfirmed user
+        await authProvider.signOut();
+        
+        // Pop back to root and let AuthWrapper show LoginScreen
+        // Then show the message
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        
+        // Show success message after a brief delay to ensure we're back at login
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Account created! Please check your email to confirm your account, then sign in.',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+        });
+      }
+      return;
+    }
+
+    // If email is confirmed, continue with profile creation
+    await Future.delayed(const Duration(milliseconds: 500));
 
     // Step 2: Create user profile
     final user = AppUser(
@@ -101,13 +131,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
           : _phoneController.text.trim(),
     );
 
-    // Debug: Check user profile data
     debugPrint('Creating user profile: ${user.toJson(excludeId: true)}');
 
     final userSuccess = await userProvider.createUserProfile(user);
     if (!userSuccess) {
       if (mounted) {
-        // Extract just the main error message for the user
         String errorMessage = 'Failed to create profile';
         if (userProvider.error != null) {
           if (userProvider.error!.contains('duplicate key')) {
@@ -127,8 +155,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
-        );          // Also print the full error to console for debugging
-          debugPrint('User profile creation error: ${userProvider.error}');
+        );
+        debugPrint('User profile creation error: ${userProvider.error}');
       }
       return;
     }
@@ -172,14 +200,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           );
           
-          // Also print the full error to console for debugging
           debugPrint('Mechanic profile creation error: ${userProvider.error}');
         }
         return;
       }
     }
 
-    // Success
+    // Success - profile created
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
