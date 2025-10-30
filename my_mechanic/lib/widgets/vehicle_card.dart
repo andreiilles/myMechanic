@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/vehicle.dart';
+import '../providers/vehicle_provider.dart';
 
 class VehicleCard extends StatelessWidget {
   final Vehicle vehicle;
@@ -40,11 +42,54 @@ class VehicleCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${vehicle.make} ${vehicle.model}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '${vehicle.make} ${vehicle.model}',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Shared badge
+                            FutureBuilder<bool>(
+                              future: context.read<VehicleProvider>().isVehicleShared(vehicle.id!),
+                              builder: (context, snapshot) {
+                                if (snapshot.data == true) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.orange[300]!),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.people,
+                                          size: 12,
+                                          color: Colors.orange[700],
+                                        ),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          'Shared',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.orange[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ],
                         ),
                         Text(
                           '${vehicle.year}',

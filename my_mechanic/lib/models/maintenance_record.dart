@@ -44,9 +44,8 @@ class MaintenanceRecord {
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+  Map<String, dynamic> toJson({bool excludeId = false}) {
+    final json = {
       'vehicle_id': vehicleId,
       'type': type.name,
       'description': description,
@@ -58,6 +57,12 @@ class MaintenanceRecord {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+    
+    if (!excludeId && id != null) {
+      json['id'] = id;
+    }
+    
+    return json;
   }
 
   factory MaintenanceRecord.fromJson(Map<String, dynamic> json) {

@@ -57,21 +57,35 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
           : _licensePlateController.text.trim(),
     );
 
-    final success = await context.read<VehicleProvider>().addVehicle(
+    final vehicleProvider = context.read<VehicleProvider>();
+    final success = await vehicleProvider.addVehicle(
       vehicle, 
       userProvider.currentUser!.id!,
     );
 
     if (success && mounted) {
       Navigator.of(context).pop();
+      
+      // Check if this was a link to existing vehicle or a new vehicle
+      final error = vehicleProvider.error;
+      final isLinked = error != null && error.contains('linked successfully');
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vehicle added successfully'),
+        SnackBar(
+          content: Text(isLinked 
+              ? 'Vehicle linked successfully! You now have shared access to this vehicle.'
+              : 'Vehicle added successfully'),
           backgroundColor: Colors.green,
+          duration: Duration(seconds: isLinked ? 4 : 3),
         ),
       );
+      
+      // Clear the error since it was actually a success message
+      if (isLinked) {
+        vehicleProvider.clearError();
+      }
     } else if (mounted) {
-      final error = context.read<VehicleProvider>().error;
+      final error = vehicleProvider.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error ?? 'Failed to add vehicle'),
