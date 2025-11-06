@@ -5,6 +5,8 @@ class Mechanic {
   final String? businessAddress;
   final String? businessPhone;
   final String? licenseNumber;
+  final double? latitude;
+  final double? longitude;
   final List<String> specializations;
   final double? averageRating;
   final int totalReviews;
@@ -22,6 +24,8 @@ class Mechanic {
     this.businessAddress,
     this.businessPhone,
     this.licenseNumber,
+    this.latitude,
+    this.longitude,
     this.specializations = const [],
     this.averageRating,
     this.totalReviews = 0,
@@ -41,6 +45,8 @@ class Mechanic {
       'business_address': businessAddress,
       'business_phone': businessPhone,
       'license_number': licenseNumber,
+      'latitude': latitude,
+      'longitude': longitude,
       'specializations': specializations,
       'average_rating': averageRating,
       'total_reviews': totalReviews,
@@ -68,6 +74,8 @@ class Mechanic {
       businessAddress: json['business_address'],
       businessPhone: json['business_phone'],
       licenseNumber: json['license_number'],
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
       specializations: json['specializations'] != null 
           ? List<String>.from(json['specializations'])
           : [],
@@ -89,6 +97,8 @@ class Mechanic {
     String? businessAddress,
     String? businessPhone,
     String? licenseNumber,
+    double? latitude,
+    double? longitude,
     List<String>? specializations,
     double? averageRating,
     int? totalReviews,
@@ -106,6 +116,8 @@ class Mechanic {
       businessAddress: businessAddress ?? this.businessAddress,
       businessPhone: businessPhone ?? this.businessPhone,
       licenseNumber: licenseNumber ?? this.licenseNumber,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       specializations: specializations ?? this.specializations,
       averageRating: averageRating ?? this.averageRating,
       totalReviews: totalReviews ?? this.totalReviews,

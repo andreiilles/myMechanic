@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../utils/platform_utils.dart';
+import 'edit_shop_screen.dart';
 
 class MyShopScreen extends StatelessWidget {
   const MyShopScreen({super.key});
@@ -156,6 +157,14 @@ class MyShopScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                   ],
+                  if (mechanic.businessPhone != null) ...[
+                    _buildInfoRow(
+                      context,
+                      PlatformUtils.isIOS ? CupertinoIcons.phone_fill : Icons.phone,
+                      mechanic.businessPhone!,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   if (mechanic.licenseNumber != null) ...[
                     _buildInfoRow(
                       context,
@@ -168,9 +177,101 @@ class MyShopScreen extends StatelessWidget {
                     _buildInfoRow(
                       context,
                       PlatformUtils.isIOS ? CupertinoIcons.money_dollar_circle_fill : Icons.attach_money,
-                      '\$${mechanic.hourlyRate}/hour',
+                      '${mechanic.hourlyRate} RON/hour',
                     ),
                   ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Specializations Card
+          if (mechanic.specializations.isNotEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          PlatformUtils.isIOS ? CupertinoIcons.wrench_fill : Icons.build,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Specializations',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: mechanic.specializations.map((spec) {
+                        return Chip(
+                          label: Text(spec),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (mechanic.specializations.isNotEmpty)
+            const SizedBox(height: 16),
+
+          // Status Card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Shop Status',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        mechanic.isAcceptingClients
+                            ? (PlatformUtils.isIOS ? CupertinoIcons.check_mark_circled_solid : Icons.check_circle)
+                            : (PlatformUtils.isIOS ? CupertinoIcons.pause_circle_fill : Icons.pause_circle),
+                        color: mechanic.isAcceptingClients ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          mechanic.isAcceptingClients
+                              ? 'Accepting New Clients'
+                              : 'Not Accepting New Clients',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: mechanic.isAcceptingClients ? Colors.green : Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    mechanic.isAcceptingClients
+                        ? 'Your shop is visible to customers and available for bookings.'
+                        : 'Your shop is hidden from new booking requests.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -249,7 +350,12 @@ class MyShopScreen extends StatelessWidget {
           if (PlatformUtils.isIOS)
             CupertinoButton.filled(
               onPressed: () {
-                // TODO: Navigate to edit shop screen
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (context) => EditShopScreen(mechanic: mechanic),
+                  ),
+                );
               },
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -265,7 +371,12 @@ class MyShopScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Navigate to edit shop screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditShopScreen(mechanic: mechanic),
+                    ),
+                  );
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('Edit Shop Info'),

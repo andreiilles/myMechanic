@@ -141,6 +141,24 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<List<Mechanic>> loadAllMechanics() async {
+    try {
+      final response = await SupabaseService.client
+          .from('mechanic_profiles')
+          .select()
+          .order('average_rating', ascending: false);
+
+      final mechanics = (response as List)
+          .map((json) => Mechanic.fromJson(json))
+          .toList();
+
+      return mechanics;
+    } catch (e) {
+      debugPrint('Error loading mechanics: $e');
+      return [];
+    }
+  }
+
   void clearUserData() {
     _currentUser = null;
     _mechanicProfile = null;

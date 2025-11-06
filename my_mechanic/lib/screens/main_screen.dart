@@ -6,6 +6,7 @@ import '../providers/user_provider.dart';
 import '../models/app_user.dart';
 import 'home_screen.dart';
 import 'vehicles_screen.dart';
+import 'find_shops_screen.dart';
 import 'profile_screen.dart';
 import 'my_shop_screen.dart';
 import 'appointments_screen.dart';
@@ -28,6 +29,7 @@ class _MainScreenState extends State<MainScreen> {
     // Different screens for mechanics vs customers
     final List<Widget> customerScreens = const [
       HomeScreen(),
+      FindShopsScreen(),
       VehiclesScreen(),
       ProfileScreen(),
     ];
@@ -83,6 +85,11 @@ class _MainScreenState extends State<MainScreen> {
         label: 'Home',
       ),
       BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.map),
+        activeIcon: Icon(CupertinoIcons.map_fill),
+        label: 'Find Shops',
+      ),
+      BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.car),
         activeIcon: Icon(CupertinoIcons.car_fill),
         label: 'Vehicles',
@@ -128,6 +135,11 @@ class _MainScreenState extends State<MainScreen> {
         icon: Icon(Icons.home_outlined),
         selectedIcon: Icon(Icons.home),
         label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.map_outlined),
+        selectedIcon: Icon(Icons.map),
+        label: 'Find Shops',
       ),
       NavigationDestination(
         icon: Icon(Icons.directions_car_outlined),

@@ -49,5 +49,9 @@
 	<string>We need camera access to take photos of your vehicles</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need photo library access to select vehicle images</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to show nearby mechanic shops</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need your location to show nearby mechanic shops</string>
 </dict>
 </plist>
