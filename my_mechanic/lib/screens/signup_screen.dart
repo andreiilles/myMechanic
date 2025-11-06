@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/app_user.dart';
@@ -88,14 +89,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
     debugPrint('Auth user email: ${authProvider.user?.email}');
     debugPrint('Email confirmed: ${authProvider.user?.emailConfirmedAt}');
 
-    // If email is not confirmed, redirect to login with message
+    // If email is not confirmed, save data to local storage and redirect to login
     if (authProvider.user?.emailConfirmedAt == null) {
+      // Save signup data to SharedPreferences for later profile creation
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_signup_email', _emailController.text.trim());
+      await prefs.setString('pending_signup_first_name', _firstNameController.text.trim());
+      await prefs.setString('pending_signup_last_name', _lastNameController.text.trim());
+      await prefs.setString('pending_signup_phone', _phoneController.text.trim());
+      await prefs.setString('pending_signup_user_type', _selectedUserType!.toString());
+      
+      if (_selectedUserType == UserType.mechanic) {
+        await prefs.setString('pending_signup_business_name', _businessNameController.text.trim());
+        await prefs.setString('pending_signup_business_address', _businessAddressController.text.trim());
+        await prefs.setString('pending_signup_license_number', _licenseNumberController.text.trim());
+        await prefs.setString('pending_signup_description', _descriptionController.text.trim());
+        await prefs.setString('pending_signup_hourly_rate', _hourlyRateController.text.trim());
+      }
+      
       if (mounted) {
         // Sign out the unconfirmed user
         await authProvider.signOut();
         
         // Pop back to root and let AuthWrapper show LoginScreen
-        // Then show the message
         Navigator.of(context).popUntil((route) => route.isFirst);
         
         // Show success message after a brief delay to ensure we're back at login
@@ -206,14 +222,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
     }
 
-    // Success - profile created
+    // Success - profile created (email was already confirmed)
+    // Reload profile and continue to main screen
+    await userProvider.loadUserProfile(authProvider.user!.id);
+    
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Account created successfully!'),
           backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
         ),
       );
+      
+      // The AuthWrapper will automatically navigate to MainScreen
+      // since the profile is now loaded
     }
   }
 
@@ -470,33 +493,53 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final isSelected = _selectedUserType == userType;
     
     return Card(
-      elevation: isSelected ? 4 : 1,
+      elevation: isSelected ? 0 : 0,
       child: InkWell(
         onTap: () {
           setState(() {
             _selectedUserType = userType;
           });
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             border: Border.all(
               color: isSelected 
                   ? Theme.of(context).primaryColor 
-                  : Colors.transparent,
-              width: 2,
+                  : Colors.grey.withOpacity(0.3),
+              width: isSelected ? 2.5 : 1.5,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
+            gradient: isSelected 
+                ? LinearGradient(
+                    colors: [
+                      Theme.of(context).primaryColor.withOpacity(0.08),
+                      Theme.of(context).primaryColor.withOpacity(0.04),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                      ? Theme.of(context).primaryColor 
-                      : Colors.grey[300],
+                  gradient: isSelected 
+                      ? LinearGradient(
+                          colors: [
+                            Theme.of(context).primaryColor,
+                            Theme.of(context).primaryColor.withOpacity(0.8),
+                          ],
+                        )
+                      : LinearGradient(
+                          colors: [
+                            Colors.grey.withOpacity(0.2),
+                            Colors.grey.withOpacity(0.1),
+                          ],
+                        ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(

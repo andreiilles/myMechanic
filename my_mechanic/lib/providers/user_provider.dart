@@ -43,7 +43,7 @@ class UserProvider with ChangeNotifier {
       _clearError();
 
       final response = await SupabaseService.client
-          .from('mechanics')
+          .from('mechanic_profiles')
           .insert(mechanic.toJson(excludeId: true))
           .select()
           .single();
@@ -77,7 +77,7 @@ class UserProvider with ChangeNotifier {
       if (_currentUser!.userType == UserType.mechanic) {
         try {
           final mechanicResponse = await SupabaseService.client
-              .from('mechanics')
+              .from('mechanic_profiles')
               .select()
               .eq('user_id', _currentUser!.id!)
               .single();
@@ -126,7 +126,7 @@ class UserProvider with ChangeNotifier {
 
       final updatedMechanic = mechanic.copyWith(updatedAt: DateTime.now());
       await SupabaseService.client
-          .from('mechanics')
+          .from('mechanic_profiles')
           .update(updatedMechanic.toJson(excludeId: true))
           .eq('id', mechanic.id!);
 

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
+import '../models/app_user.dart';
+import '../models/mechanic.dart';
 import 'login_screen.dart';
 import 'main_screen.dart';
 import 'profile_setup_screen.dart';
@@ -112,6 +115,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     try {
       await userProvider.loadUserProfile(authProvider.user!.id);
+      
+      // If profile doesn't exist, check for pending signup data
+      if (userProvider.currentUser == null) {
+        await _checkAndCreatePendingProfile(authProvider, userProvider);
+      }
     } catch (e) {
       debugPrint('Error loading profile: $e');
     } finally {
@@ -121,6 +129,83 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _hasAttemptedLoad = true;
         });
       }
+    }
+  }
+
+  Future<void> _checkAndCreatePendingProfile(AuthProvider authProvider, UserProvider userProvider) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pendingEmail = prefs.getString('pending_signup_email');
+      
+      // Check if there's pending signup data for this email
+      if (pendingEmail != null && pendingEmail == authProvider.user!.email) {
+        debugPrint('Found pending signup data, creating profile...');
+        
+        final firstName = prefs.getString('pending_signup_first_name') ?? '';
+        final lastName = prefs.getString('pending_signup_last_name') ?? '';
+        final phone = prefs.getString('pending_signup_phone') ?? '';
+        final userTypeStr = prefs.getString('pending_signup_user_type') ?? '';
+        
+        // Parse user type
+        UserType? userType;
+        if (userTypeStr.contains('customer')) {
+          userType = UserType.customer;
+        } else if (userTypeStr.contains('mechanic')) {
+          userType = UserType.mechanic;
+        }
+        
+        if (userType != null && firstName.isNotEmpty && lastName.isNotEmpty) {
+          // Create user profile
+          final user = AppUser(
+            authId: authProvider.user!.id,
+            email: authProvider.user!.email!,
+            firstName: firstName,
+            lastName: lastName,
+            userType: userType,
+            phoneNumber: phone.isEmpty ? null : phone,
+          );
+          
+          final userSuccess = await userProvider.createUserProfile(user);
+          
+          if (userSuccess && userType == UserType.mechanic) {
+            // Create mechanic profile
+            final businessName = prefs.getString('pending_signup_business_name') ?? '';
+            final businessAddress = prefs.getString('pending_signup_business_address') ?? '';
+            final licenseNumber = prefs.getString('pending_signup_license_number') ?? '';
+            final description = prefs.getString('pending_signup_description') ?? '';
+            final hourlyRateStr = prefs.getString('pending_signup_hourly_rate') ?? '';
+            
+            if (businessName.isNotEmpty) {
+              final mechanic = Mechanic(
+                userId: userProvider.currentUser!.id!,
+                businessName: businessName,
+                businessAddress: businessAddress.isEmpty ? null : businessAddress,
+                licenseNumber: licenseNumber.isEmpty ? null : licenseNumber,
+                description: description.isEmpty ? null : description,
+                hourlyRate: hourlyRateStr.isEmpty ? null : double.tryParse(hourlyRateStr),
+              );
+              
+              await userProvider.createMechanicProfile(mechanic);
+            }
+          }
+          
+          // Clear pending signup data
+          await prefs.remove('pending_signup_email');
+          await prefs.remove('pending_signup_first_name');
+          await prefs.remove('pending_signup_last_name');
+          await prefs.remove('pending_signup_phone');
+          await prefs.remove('pending_signup_user_type');
+          await prefs.remove('pending_signup_business_name');
+          await prefs.remove('pending_signup_business_address');
+          await prefs.remove('pending_signup_license_number');
+          await prefs.remove('pending_signup_description');
+          await prefs.remove('pending_signup_hourly_rate');
+          
+          debugPrint('Profile created from pending signup data');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error creating profile from pending data: $e');
     }
   }
 }

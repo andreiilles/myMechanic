@@ -64,20 +64,42 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const SizedBox(height: 60),
                 // Logo/Icon
-                Icon(
-                  Icons.car_repair,
-                  size: 80,
-                  color: Theme.of(context).primaryColor,
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor.withOpacity(0.1),
+                          Theme.of(context).primaryColor.withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).primaryColor.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.car_repair,
+                      size: 80,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 // Title
                 Text(
                   'My Mechanic',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 8),
                 Text(
                   'Track your car maintenance',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(

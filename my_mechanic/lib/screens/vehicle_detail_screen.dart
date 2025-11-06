@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'dart:io' show Platform;
+import 'package:image_picker/image_picker.dart';
 import '../models/vehicle.dart';
 import '../models/maintenance_record.dart';
 import '../providers/vehicle_provider.dart';
@@ -49,7 +51,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
     if (PlatformUtils.isIOS) {
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
-          middle: Text('${widget.vehicle.year} ${widget.vehicle.make}'),
+          middle: Text('${widget.vehicle.make} ${widget.vehicle.model}'),
           trailing: CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: _showOptionsMenu,
@@ -64,7 +66,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.vehicle.year} ${widget.vehicle.make}'),
+        title: Text('${widget.vehicle.make} ${widget.vehicle.model}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -115,19 +117,62 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // Vehicle Icon with shared badge
+          // Vehicle Image/Icon with shared badge and upload option
           Stack(
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
+              GestureDetector(
+                onTap: _showImageOptions,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: widget.vehicle.imageUrl != null && widget.vehicle.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            widget.vehicle.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car,
+                                size: 60,
+                                color: Colors.white,
+                              );
+                            },
+                          )
+                        : Icon(
+                            PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car,
+                            size: 60,
+                            color: Colors.white,
+                          ),
+                  ),
                 ),
-                child: Icon(
-                  PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car,
-                  size: 60,
-                  color: Colors.white,
+              ),
+              // Camera icon for adding/changing photo
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onTap: _showImageOptions,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Icon(
+                      PlatformUtils.isIOS ? CupertinoIcons.camera_fill : Icons.camera_alt,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
               // Show "Shared" badge if vehicle is shared
@@ -136,7 +181,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                 builder: (context, snapshot) {
                   if (snapshot.data == true) {
                     return Positioned(
-                      right: 0,
+                      left: 0,
                       bottom: 0,
                       child: Container(
                         padding: const EdgeInsets.all(6),
@@ -159,21 +204,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             ],
           ),
           const SizedBox(height: 16),
-          // Vehicle Name
+          // Vehicle Name - Make Model
           Text(
-            '${widget.vehicle.year} ${widget.vehicle.make}',
+            '${widget.vehicle.make} ${widget.vehicle.model}',
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
+              decoration: TextDecoration.none, // Explicitly remove any underline
             ),
           ),
           const SizedBox(height: 4),
+          // Year
           Text(
-            widget.vehicle.model,
+            '${widget.vehicle.year}',
             style: const TextStyle(
               fontSize: 18,
               color: Colors.white70,
+              decoration: TextDecoration.none, // Explicitly remove any underline
             ),
           ),
           if (widget.vehicle.licensePlate != null) ...[
@@ -201,51 +249,93 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
   }
 
   Widget _buildTabBar() {
-    if (PlatformUtils.isIOS) {
-      return Container(
-        decoration: BoxDecoration(
-          color: CupertinoColors.systemBackground.resolveFrom(context),
-          border: Border(
-            bottom: BorderSide(
-              color: CupertinoColors.separator.resolveFrom(context),
-              width: 0.5,
+    debugPrint('Building TabBar - Platform.isIOS: ${Platform.isIOS}');
+    debugPrint('Building TabBar - PlatformUtils.isIOS: ${PlatformUtils.isIOS}');
+    
+    if (Platform.isIOS) {
+      debugPrint('Using CupertinoSlidingSegmentedControl for iOS');
+      // Use AnimatedBuilder to rebuild whenever the tab controller animation changes
+      return AnimatedBuilder(
+        animation: _tabController.animation!,
+        builder: (context, child) {
+          // Get the current index, accounting for animation progress
+          final int currentIndex = _tabController.animation!.value.round();
+          
+          return Container(
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemBackground.resolveFrom(context),
             ),
-          ),
-        ),
-        child: CupertinoSlidingSegmentedControl<int>(
-          groupValue: _tabController.index,
-          onValueChanged: (value) {
-            if (value != null) {
-              setState(() {
-                _tabController.animateTo(value);
-              });
-            }
-          },
-          children: const {
-            0: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text('Overview'),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: CupertinoSlidingSegmentedControl<int>(
+              groupValue: currentIndex,
+              backgroundColor: CupertinoColors.systemGrey5.resolveFrom(context),
+              thumbColor: CupertinoColors.systemBlue,
+              onValueChanged: (value) {
+                if (value != null) {
+                  _tabController.animateTo(value);
+                }
+              },
+              children: {
+                0: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Text(
+                    'Overview',
+                    style: TextStyle(
+                      color: currentIndex == 0 ? CupertinoColors.white : CupertinoColors.black,
+                      fontWeight: currentIndex == 0 ? FontWeight.w600 : FontWeight.normal,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+                1: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Text(
+                    'Maintenance',
+                    style: TextStyle(
+                      color: currentIndex == 1 ? CupertinoColors.white : CupertinoColors.black,
+                      fontWeight: currentIndex == 1 ? FontWeight.w600 : FontWeight.normal,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+                2: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Text(
+                    'Documents',
+                    style: TextStyle(
+                      color: currentIndex == 2 ? CupertinoColors.white : CupertinoColors.black,
+                      fontWeight: currentIndex == 2 ? FontWeight.w600 : FontWeight.normal,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              },
             ),
-            1: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text('Maintenance'),
-            ),
-            2: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text('Documents'),
-            ),
-          },
-        ),
+          );
+        },
       );
     }
 
-    return Material(
-      color: Theme.of(context).scaffoldBackgroundColor,
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+      ),
       child: TabBar(
         controller: _tabController,
         labelColor: Theme.of(context).primaryColor,
         unselectedLabelColor: Colors.grey,
-        indicatorColor: Theme.of(context).primaryColor,
+        indicator: const BoxDecoration(
+          color: Colors.transparent,
+        ),
+        dividerColor: Colors.transparent,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 14,
+        ),
         tabs: const [
           Tab(text: 'Overview'),
           Tab(text: 'Maintenance'),
@@ -279,6 +369,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               'Current Mileage',
               '${widget.vehicle.currentMileage.toStringAsFixed(0)} km',
             ),
+            if (widget.vehicle.lastTechnicalInspection != null) ...[
+              _buildInfoRow(
+                'Last Inspection',
+                _formatDate(widget.vehicle.lastTechnicalInspection!),
+              ),
+              if (widget.vehicle.nextTechnicalInspection != null)
+                _buildInfoRow(
+                  'Next Inspection',
+                  _formatDate(widget.vehicle.nextTechnicalInspection!),
+                ),
+              _buildInfoRow(
+                'Inspection Interval',
+                widget.vehicle.inspectionIntervalDescription,
+              ),
+            ],
             _buildInfoRow(
               'Added',
               _formatDate(widget.vehicle.createdAt),
@@ -734,6 +839,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
           Expanded(
             child: Text(
               value,
+              textAlign: TextAlign.right,
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
@@ -815,9 +921,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
 
   void _editVehicle() {
     // TODO: Navigate to edit vehicle screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit vehicle feature coming soon')),
-    );
+    _showMessage('Edit vehicle feature coming soon', isError: false);
   }
 
   void _navigateToAddMaintenance() async {
@@ -842,12 +946,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
       debugPrint('Stack trace: $stackTrace');
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showMessage('Error: ${e.toString()}', isError: true);
       }
     }
   }
@@ -867,23 +966,256 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
         
         if (mounted) {
           if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vehicle deleted successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
             Navigator.of(context).pop(); // Go back to home screen
+            
+            // Show success message
+            if (PlatformUtils.isIOS) {
+              // For iOS, we can't show SnackBar since we're using CupertinoPageScaffold
+              // The success is implicit by going back
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Vehicle deleted successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(vehicleProvider.error ?? 'Failed to delete vehicle'),
-                backgroundColor: Colors.red,
-              ),
+            // Show error message
+            _showMessage(
+              vehicleProvider.error ?? 'Failed to delete vehicle',
+              isError: true,
             );
           }
         }
       }
     });
+  }
+
+  void _showMessage(String message, {required bool isError}) {
+    if (PlatformUtils.isIOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: Text(isError ? 'Error' : 'Success'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? Colors.red : Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _showImageOptions() {
+    if (PlatformUtils.isIOS) {
+      showCupertinoModalPopup(
+        context: context,
+        builder: (BuildContext context) => CupertinoActionSheet(
+          title: const Text('Vehicle Photo'),
+          actions: <CupertinoActionSheetAction>[
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+              child: const Text('Take Photo'),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+              child: const Text('Choose from Gallery'),
+            ),
+            if (widget.vehicle.imageUrl != null && widget.vehicle.imageUrl!.isNotEmpty)
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _removeImage();
+                },
+                isDestructiveAction: true,
+                child: const Text('Remove Photo'),
+              ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take Photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+                if (widget.vehicle.imageUrl != null && widget.vehicle.imageUrl!.isNotEmpty)
+                  ListTile(
+                    leading: const Icon(Icons.delete, color: Colors.red),
+                    title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _removeImage();
+                    },
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      if (!mounted) return;
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => PopScope(
+          canPop: false,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Uploading image...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Upload image and update vehicle
+      final vehicleProvider = context.read<VehicleProvider>();
+      debugPrint('Starting image upload...');
+      final success = await vehicleProvider.uploadVehicleImage(
+        widget.vehicle.id!,
+        pickedFile.path,
+      );
+      debugPrint('Upload completed. Success: $success');
+
+      if (!mounted) {
+        debugPrint('Widget not mounted, returning');
+        return;
+      }
+
+      // Close loading dialog
+      debugPrint('Closing loading dialog...');
+      Navigator.of(context, rootNavigator: true).pop();
+      debugPrint('Dialog closed');
+
+      // Show success/error message
+      if (success) {
+        // Refresh the screen to show new image
+        setState(() {});
+        
+        _showMessage('Vehicle photo updated successfully', isError: false);
+      } else {
+        _showMessage(vehicleProvider.error ?? 'Failed to upload image', isError: true);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+      if (mounted) {
+        // Try to close loading dialog if it's open
+        try {
+          Navigator.of(context, rootNavigator: true).pop();
+        } catch (_) {
+          // Dialog might not be open
+        }
+        
+        _showMessage('Error: ${e.toString()}', isError: true);
+      }
+    }
+  }
+
+  Future<void> _removeImage() async {
+    final confirmed = await showAdaptiveAlertDialog(
+      context: context,
+      title: 'Remove Photo',
+      content: 'Are you sure you want to remove the vehicle photo?',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      isDestructive: true,
+    );
+
+    if (confirmed != true) return;
+
+    if (!mounted) return;
+
+    try {
+      final vehicleProvider = context.read<VehicleProvider>();
+      final success = await vehicleProvider.removeVehicleImage(widget.vehicle.id!);
+
+      if (!mounted) return;
+
+      if (success) {
+        setState(() {});
+        
+        _showMessage('Vehicle photo removed', isError: false);
+      } else {
+        _showMessage(vehicleProvider.error ?? 'Failed to remove image', isError: true);
+      }
+    } catch (e) {
+      debugPrint('Error removing image: $e');
+      if (mounted) {
+        _showMessage('Error: ${e.toString()}', isError: true);
+      }
+    }
   }
 }

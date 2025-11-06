@@ -3,11 +3,13 @@ class Mechanic {
   final String userId; // References users table
   final String businessName;
   final String? businessAddress;
+  final String? businessPhone;
   final String? licenseNumber;
   final List<String> specializations;
-  final double? rating;
+  final double? averageRating;
   final int totalReviews;
   final bool isVerified;
+  final bool isAcceptingClients;
   final String? description;
   final double? hourlyRate;
   final DateTime createdAt;
@@ -18,11 +20,13 @@ class Mechanic {
     required this.userId,
     required this.businessName,
     this.businessAddress,
+    this.businessPhone,
     this.licenseNumber,
     this.specializations = const [],
-    this.rating,
+    this.averageRating,
     this.totalReviews = 0,
     this.isVerified = false,
+    this.isAcceptingClients = true,
     this.description,
     this.hourlyRate,
     DateTime? createdAt,
@@ -35,11 +39,13 @@ class Mechanic {
       'user_id': userId,
       'business_name': businessName,
       'business_address': businessAddress,
+      'business_phone': businessPhone,
       'license_number': licenseNumber,
       'specializations': specializations,
-      'rating': rating,
+      'average_rating': averageRating,
       'total_reviews': totalReviews,
       'is_verified': isVerified,
+      'is_accepting_clients': isAcceptingClients,
       'description': description,
       'hourly_rate': hourlyRate,
       'created_at': createdAt.toIso8601String(),
@@ -60,13 +66,15 @@ class Mechanic {
       userId: json['user_id'],
       businessName: json['business_name'],
       businessAddress: json['business_address'],
+      businessPhone: json['business_phone'],
       licenseNumber: json['license_number'],
       specializations: json['specializations'] != null 
           ? List<String>.from(json['specializations'])
           : [],
-      rating: json['rating']?.toDouble(),
+      averageRating: json['average_rating']?.toDouble(),
       totalReviews: json['total_reviews'] ?? 0,
       isVerified: json['is_verified'] ?? false,
+      isAcceptingClients: json['is_accepting_clients'] ?? true,
       description: json['description'],
       hourlyRate: json['hourly_rate']?.toDouble(),
       createdAt: DateTime.parse(json['created_at']),
@@ -79,11 +87,13 @@ class Mechanic {
     String? userId,
     String? businessName,
     String? businessAddress,
+    String? businessPhone,
     String? licenseNumber,
     List<String>? specializations,
-    double? rating,
+    double? averageRating,
     int? totalReviews,
     bool? isVerified,
+    bool? isAcceptingClients,
     String? description,
     double? hourlyRate,
     DateTime? createdAt,
@@ -94,11 +104,13 @@ class Mechanic {
       userId: userId ?? this.userId,
       businessName: businessName ?? this.businessName,
       businessAddress: businessAddress ?? this.businessAddress,
+      businessPhone: businessPhone ?? this.businessPhone,
       licenseNumber: licenseNumber ?? this.licenseNumber,
       specializations: specializations ?? this.specializations,
-      rating: rating ?? this.rating,
+      averageRating: averageRating ?? this.averageRating,
       totalReviews: totalReviews ?? this.totalReviews,
       isVerified: isVerified ?? this.isVerified,
+      isAcceptingClients: isAcceptingClients ?? this.isAcceptingClients,
       description: description ?? this.description,
       hourlyRate: hourlyRate ?? this.hourlyRate,
       createdAt: createdAt ?? this.createdAt,

@@ -19,8 +19,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         navigationBar: const CupertinoNavigationBar(
           middle: Text('Appointments'),
         ),
-        child: SafeArea(
-          child: _buildContent(),
+        child: Material(
+          color: CupertinoColors.systemGroupedBackground,
+          child: SafeArea(
+            child: _buildContent(),
+          ),
         ),
       );
     }
@@ -74,16 +77,35 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? CupertinoColors.activeBlue : CupertinoColors.systemGrey5,
+            gradient: isSelected 
+                ? LinearGradient(
+                    colors: [
+                      CupertinoColors.activeBlue,
+                      CupertinoColors.activeBlue.withOpacity(0.8),
+                    ],
+                  )
+                : LinearGradient(
+                    colors: [
+                      Colors.grey.withOpacity(0.1),
+                      Colors.grey.withOpacity(0.05),
+                    ],
+                  ),
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected 
+                  ? CupertinoColors.activeBlue.withOpacity(0.5)
+                  : Colors.grey.withOpacity(0.2),
+              width: 1,
+            ),
           ),
           child: Text(
             label,
             style: TextStyle(
               color: isSelected ? CupertinoColors.white : CupertinoColors.black,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              letterSpacing: 0.3,
             ),
           ),
         ),
@@ -108,19 +130,39 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.event_note,
-              size: 80,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.grey.withOpacity(0.1),
+                    Colors.grey.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.event_note,
+                size: 80,
+                color: Colors.grey[400],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               'No appointments yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
+                color: Colors.grey[700],
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'Appointments from customers will appear here',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -135,32 +177,32 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   }
 
   // TODO: This will be used when we have real appointment data
-  Widget _buildAppointmentCard(dynamic appointment) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          child: Icon(
-            PlatformUtils.isIOS ? CupertinoIcons.person : Icons.person,
-          ),
-        ),
-        title: Text('Customer Name'), // appointment.customerName
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text('Vehicle: Make Model'), // appointment.vehicle
-            const SizedBox(height: 2),
-            Text('Date & Time'), // appointment.dateTime
-          ],
-        ),
-        trailing: Icon(
-          PlatformUtils.isIOS ? CupertinoIcons.chevron_right : Icons.chevron_right,
-        ),
-        onTap: () {
-          // TODO: Navigate to appointment details
-        },
-      ),
-    );
-  }
+  // Widget _buildAppointmentCard(dynamic appointment) {
+  //   return Card(
+  //     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //     child: ListTile(
+  //       leading: CircleAvatar(
+  //         child: Icon(
+  //           PlatformUtils.isIOS ? CupertinoIcons.person : Icons.person,
+  //         ),
+  //       ),
+  //       title: Text('Customer Name'), // appointment.customerName
+  //       subtitle: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const SizedBox(height: 4),
+  //           Text('Vehicle: Make Model'), // appointment.vehicle
+  //           const SizedBox(height: 2),
+  //           Text('Date & Time'), // appointment.dateTime
+  //         ],
+  //       ),
+  //       trailing: Icon(
+  //         PlatformUtils.isIOS ? CupertinoIcons.chevron_right : Icons.chevron_right,
+  //       ),
+  //       onTap: () {
+  //         // TODO: Navigate to appointment details
+  //       },
+  //     ),
+  //   );
+  // }
 }

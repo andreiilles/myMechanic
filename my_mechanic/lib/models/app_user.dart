@@ -14,6 +14,7 @@ class AppUser {
   final String lastName;
   final UserType userType;
   final String? phoneNumber;
+  final String? profileImageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,6 +26,7 @@ class AppUser {
     required this.lastName,
     required this.userType,
     this.phoneNumber,
+    this.profileImageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
@@ -40,6 +42,7 @@ class AppUser {
       'last_name': lastName,
       'user_type': userType.name,
       'phone_number': phoneNumber,
+      'profile_image_url': profileImageUrl,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -64,6 +67,7 @@ class AppUser {
         orElse: () => UserType.customer,
       ),
       phoneNumber: json['phone_number'],
+      profileImageUrl: json['profile_image_url'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -77,6 +81,7 @@ class AppUser {
     String? lastName,
     UserType? userType,
     String? phoneNumber,
+    String? profileImageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -88,6 +93,7 @@ class AppUser {
       lastName: lastName ?? this.lastName,
       userType: userType ?? this.userType,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

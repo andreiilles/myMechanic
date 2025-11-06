@@ -34,17 +34,44 @@ class MyShopScreen extends StatelessWidget {
   Widget _buildContent(BuildContext context, mechanic) {
     if (mechanic == null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
-              size: 64,
-              color: Colors.orange[300],
-            ),
-            const SizedBox(height: 16),
-            const Text('Mechanic profile not found'),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.orange.withOpacity(0.1),
+                      Colors.orange.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.orange.withOpacity(0.3),
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
+                  size: 64,
+                  color: Colors.orange[400],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Mechanic profile not found',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -63,10 +90,28 @@ class MyShopScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        PlatformUtils.isIOS ? CupertinoIcons.building_2_fill : Icons.business,
-                        size: 32,
-                        color: Theme.of(context).colorScheme.primary,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          PlatformUtils.isIOS ? CupertinoIcons.building_2_fill : Icons.business,
+                          size: 32,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -155,14 +200,14 @@ class MyShopScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        mechanic.rating.toStringAsFixed(1),
+                        (mechanic.averageRating ?? 0.0).toStringAsFixed(1),
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '(${mechanic.totalReviews} reviews)',
+                        '(${mechanic.totalReviews ?? 0} reviews)',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[600],
                         ),

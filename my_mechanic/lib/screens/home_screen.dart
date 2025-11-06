@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/vehicle_provider.dart';
 import '../models/vehicle.dart';
 import '../utils/platform_utils.dart';
 import '../widgets/vehicle_card.dart';
 import '../widgets/adaptive_widgets.dart';
+import '../widgets/next_inspection_card.dart';
 import 'add_vehicle_screen.dart';
 import 'vehicle_detail_screen.dart';
 
@@ -36,16 +36,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     if (PlatformUtils.isIOS) {
       return CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          middle: const Text('My Vehicles'),
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _showLogoutDialog,
-            child: const Icon(CupertinoIcons.ellipsis),
-          ),
+        navigationBar: const CupertinoNavigationBar(
+          middle: Text('My Vehicles'),
         ),
-        child: SafeArea(
-          child: _buildBody(),
+        child: Material(
+          color: CupertinoColors.systemGroupedBackground,
+          child: SafeArea(
+            child: _buildBody(),
+          ),
         ),
       );
     }
@@ -53,46 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Vehicles'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _showLogoutDialog();
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout),
-                      SizedBox(width: 8),
-                      Text('Logout'),
-                    ],
-                  ),
-                ),
-              ];
-            },
-          ),
-        ],
       ),
       body: _buildBody(),
-      floatingActionButton: Consumer<VehicleProvider>(
-        builder: (context, vehicleProvider, _) {
-          if (vehicleProvider.vehicles.isEmpty && !vehicleProvider.isLoading) {
-            return FloatingActionButton.extended(
-              onPressed: _navigateToAddVehicle,
-              icon: const Icon(Icons.add),
-              label: const Text('Add Vehicle'),
-            );
-          }
-          return FloatingActionButton(
-            onPressed: _navigateToAddVehicle,
-            child: const Icon(Icons.add),
-          );
-        },
-      ),
     );
   }
 
@@ -107,45 +67,75 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (vehicleProvider.error != null) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
-                  size: 64,
-                  color: Colors.red[300],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading vehicles',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  vehicleProvider.error!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                if (PlatformUtils.isIOS)
-                  CupertinoButton.filled(
-                    onPressed: () {
-                      if (userProvider.currentUser != null) {
-                        vehicleProvider.loadVehicles(userProvider.currentUser!.id!);
-                      }
-                    },
-                    child: const Text('Retry'),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: () {
-                      if (userProvider.currentUser != null) {
-                        vehicleProvider.loadVehicles(userProvider.currentUser!.id!);
-                      }
-                    },
-                    child: const Text('Retry'),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red.withOpacity(0.1),
+                          Colors.red.withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.red.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
+                      size: 64,
+                      color: Colors.red[400],
+                    ),
                   ),
-              ],
+                  const SizedBox(height: 24),
+                  Text(
+                    'Error loading vehicles',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    vehicleProvider.error!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  if (PlatformUtils.isIOS)
+                    CupertinoButton.filled(
+                      onPressed: () {
+                        if (userProvider.currentUser != null) {
+                          vehicleProvider.loadVehicles(userProvider.currentUser!.id!);
+                        }
+                      },
+                      child: const Text('Retry'),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        if (userProvider.currentUser != null) {
+                          vehicleProvider.loadVehicles(userProvider.currentUser!.id!);
+                        }
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                ],
+              ),
             ),
           );
         }
@@ -161,12 +151,20 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: vehicleProvider.vehicles.length,
+            padding: const EdgeInsets.only(top: 0, bottom: 16),
+            itemCount: vehicleProvider.vehicles.length + 1,
             itemBuilder: (context, index) {
-              final vehicle = vehicleProvider.vehicles[index];
+              // First item is the inspection card
+              if (index == 0) {
+                return NextInspectionCard(
+                  vehicles: vehicleProvider.vehicles,
+                );
+              }
+              
+              // Rest are vehicle cards
+              final vehicle = vehicleProvider.vehicles[index - 1];
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: VehicleCard(
                   vehicle: vehicle,
                   onTap: () => _navigateToVehicleDetail(vehicle),
@@ -186,19 +184,39 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car_outlined,
-              size: 80,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.grey.withOpacity(0.1),
+                    Colors.grey.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car_outlined,
+                size: 80,
+                color: Colors.grey[400],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               'No vehicles yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
+                color: Colors.grey[700],
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'Add your first vehicle to start tracking maintenance',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -206,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             if (PlatformUtils.isIOS)
               CupertinoButton.filled(
                 onPressed: _navigateToAddVehicle,
@@ -224,6 +242,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: _navigateToAddVehicle,
                 icon: const Icon(Icons.add),
                 label: const Text('Add Vehicle'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
               ),
           ],
         ),
@@ -245,20 +266,5 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => VehicleDetailScreen(vehicle: vehicle),
       ),
     );
-  }
-
-  void _showLogoutDialog() {
-    showAdaptiveAlertDialog(
-      context: context,
-      title: 'Logout',
-      content: 'Are you sure you want to logout?',
-      confirmText: 'Logout',
-      cancelText: 'Cancel',
-      isDestructive: true,
-    ).then((confirmed) {
-      if (confirmed == true) {
-        context.read<AuthProvider>().signOut();
-      }
-    });
   }
 }

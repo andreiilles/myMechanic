@@ -19,6 +19,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
   final _vinController = TextEditingController();
   final _mileageController = TextEditingController();
   final _licensePlateController = TextEditingController();
+  DateTime? _lastTechnicalInspection;
 
   @override
   void dispose() {
@@ -46,7 +47,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     }
 
     final vehicle = Vehicle(
-      userId: '', // Will be set in the provider
+      ownerId: '', // Will be set in the provider
       make: _makeController.text.trim(),
       model: _modelController.text.trim(),
       year: int.parse(_yearController.text),
@@ -55,40 +56,31 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
       licensePlate: _licensePlateController.text.trim().isEmpty
           ? null
           : _licensePlateController.text.trim(),
+      lastTechnicalInspection: _lastTechnicalInspection,
     );
 
     final vehicleProvider = context.read<VehicleProvider>();
-    final success = await vehicleProvider.addVehicle(
+    final result = await vehicleProvider.addVehicle(
       vehicle, 
       userProvider.currentUser!.id!,
     );
 
-    if (success && mounted) {
+    if (result.success && mounted) {
       Navigator.of(context).pop();
-      
-      // Check if this was a link to existing vehicle or a new vehicle
-      final error = vehicleProvider.error;
-      final isLinked = error != null && error.contains('linked successfully');
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isLinked 
+          content: Text(result.wasLinked 
               ? 'Vehicle linked successfully! You now have shared access to this vehicle.'
               : 'Vehicle added successfully'),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: isLinked ? 4 : 3),
+          duration: Duration(seconds: result.wasLinked ? 4 : 3),
         ),
       );
-      
-      // Clear the error since it was actually a success message
-      if (isLinked) {
-        vehicleProvider.clearError();
-      }
     } else if (mounted) {
-      final error = vehicleProvider.error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error ?? 'Failed to add vehicle'),
+          content: Text(result.error ?? 'Failed to add vehicle'),
           backgroundColor: Colors.red,
         ),
       );
@@ -110,17 +102,39 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).primaryColor.withOpacity(0.1),
+                      Theme.of(context).primaryColor.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    width: 1.5,
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.directions_car,
-                      size: 32,
-                      color: Theme.of(context).primaryColor,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.directions_car,
+                        size: 32,
+                        color: Theme.of(context).primaryColor,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -247,6 +261,42 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                   labelText: 'License Plate',
                   hintText: 'Optional',
                   border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Technical inspection date field (optional)
+              InkWell(
+                onTap: () async {
+                  final now = DateTime.now();
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _lastTechnicalInspection ?? now.subtract(const Duration(days: 365)),
+                    firstDate: DateTime(now.year - 15),
+                    lastDate: now,
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _lastTechnicalInspection = picked;
+                    });
+                  }
+                },
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Last Technical Inspection (ITP)',
+                    hintText: 'Optional - Tap to select date',
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  child: Text(
+                    _lastTechnicalInspection == null
+                        ? 'Not set'
+                        : '${_lastTechnicalInspection!.day}/${_lastTechnicalInspection!.month}/${_lastTechnicalInspection!.year}',
+                    style: TextStyle(
+                      color: _lastTechnicalInspection == null
+                          ? Colors.grey[600]
+                          : null,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

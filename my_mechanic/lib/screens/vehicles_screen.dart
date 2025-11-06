@@ -76,37 +76,67 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
 
         if (vehicleProvider.error != null) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
-                  size: 64,
-                  color: Colors.red[300],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error loading vehicles',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  vehicleProvider.error!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                if (PlatformUtils.isIOS)
-                  CupertinoButton.filled(
-                    onPressed: _loadVehicles,
-                    child: const Text('Retry'),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: _loadVehicles,
-                    child: const Text('Retry'),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.red.withOpacity(0.1),
+                          Colors.red.withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.red.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
+                      size: 64,
+                      color: Colors.red[400],
+                    ),
                   ),
-              ],
+                  const SizedBox(height: 24),
+                  Text(
+                    'Error loading vehicles',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    vehicleProvider.error!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  if (PlatformUtils.isIOS)
+                    CupertinoButton.filled(
+                      onPressed: _loadVehicles,
+                      child: const Text('Retry'),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: _loadVehicles,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                ],
+              ),
             ),
           );
         }
@@ -145,19 +175,39 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car_outlined,
-              size: 80,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.grey.withOpacity(0.1),
+                    Colors.grey.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.2),
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car_outlined,
+                size: 80,
+                color: Colors.grey[400],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               'No vehicles yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
+                color: Colors.grey[700],
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'Add your first vehicle to start tracking maintenance',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -165,7 +215,7 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             if (PlatformUtils.isIOS)
               CupertinoButton.filled(
                 onPressed: _navigateToAddVehicle,
@@ -183,6 +233,9 @@ class _VehiclesScreenState extends State<VehiclesScreen> {
                 onPressed: _navigateToAddVehicle,
                 icon: const Icon(Icons.add),
                 label: const Text('Add Vehicle'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
               ),
           ],
         ),

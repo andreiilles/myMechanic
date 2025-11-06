@@ -2,6 +2,18 @@
 
 A Flutter app to help users manage their car maintenance, track service history, and receive reminders for important maintenance tasks.
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+- **[Implementation Guides](docs/implementation/)** - Feature implementation documentation
+- **[Bug Fixes](docs/fixes/)** - Documentation for resolved issues
+- **[Troubleshooting](docs/troubleshooting/)** - Problem-solving guides
+- **[Database](docs/database/)** - Database migrations and setup
+- **[Guides](docs/guides/)** - Quick reference guides
+
+See the [Documentation README](docs/README.md) for a complete overview.
+
 ## Features
 
 - **User Authentication**: Secure login and registration using Supabase Auth

@@ -56,20 +56,33 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
       appBar: PlatformUtils.isIOS
           ? AppBar(
               title: const Text('Add Maintenance'),
-              leading: TextButton(
+              leading: CupertinoButton(
+                padding: EdgeInsets.zero,
                 onPressed: _isSaving ? null : () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 17,
+                  ),
+                ),
               ),
               actions: [
                 if (_isSaving)
                   const Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: EdgeInsets.only(right: 16.0),
                     child: CupertinoActivityIndicator(),
                   )
                 else
-                  TextButton(
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
                     onPressed: _saveMaintenance,
-                    child: const Text('Save'),
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
               ],
             )
@@ -107,7 +120,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
             // Vehicle Info
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -128,7 +141,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             
             // Service Type
             Text(
@@ -139,7 +152,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
             ),
             const SizedBox(height: 8),
             _buildServiceTypeDropdown(),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Description
             TextFormField(
@@ -155,7 +168,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
               style: const TextStyle(fontSize: 16),
               maxLines: 2,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Cost
             TextFormField(
@@ -181,7 +194,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Mileage
             TextFormField(
@@ -207,7 +220,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Service Date
             Text(
@@ -218,7 +231,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
             ),
             const SizedBox(height: 8),
             _buildDatePicker(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Service Provider
             TextFormField(
@@ -233,7 +246,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
               ),
               style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Notes
             TextFormField(
@@ -249,7 +262,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
               style: const TextStyle(fontSize: 16),
               maxLines: 4,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // Save Button (Material only, iOS has it in nav bar)
             if (!PlatformUtils.isIOS)
@@ -261,10 +274,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('Save Maintenance Record'),
-                      ),
+                    : const Text('Save Maintenance Record'),
               ),
           ],
         ),

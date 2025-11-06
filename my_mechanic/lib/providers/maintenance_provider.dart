@@ -144,4 +144,10 @@ class MaintenanceProvider with ChangeNotifier {
     _clearError();
     notifyListeners();
   }
+
+  void clearMaintenanceData() {
+    _records = [];
+    _clearError();
+    notifyListeners();
+  }
 }
