@@ -4,48 +4,82 @@ A Flutter app to help users manage their car maintenance, track service history,
 
 ## 📚 Documentation
 
-Comprehensive documentation is available in the [`docs/`](docs/) directory:
+**All documentation has been organized into the [`docs/`](docs/) directory.**
 
-- **[Implementation Guides](docs/implementation/)** - Feature implementation documentation
-- **[Bug Fixes](docs/fixes/)** - Documentation for resolved issues
-- **[Troubleshooting](docs/troubleshooting/)** - Problem-solving guides
-- **[Database](docs/database/)** - Database migrations and setup
-- **[Guides](docs/guides/)** - Quick reference guides
+### Quick Links
+- 📖 **[Documentation Index](docs/INDEX.md)** - Complete visual guide to all documentation
+- 🚀 **[Quick Navigation](docs/QUICK_NAV.md)** - Fast access to common resources
+- 📋 **[Documentation README](docs/README.md)** - Overview and organization
 
-See the [Documentation README](docs/README.md) for a complete overview.
+### Documentation Categories
+
+| Category | Location | Description |
+|----------|----------|-------------|
+| 🔧 **Implementation** | [`docs/implementation/`](docs/implementation/) | Feature implementation guides (Vehicle management, Image upload, UI, etc.) |
+| 🐛 **Bug Fixes** | [`docs/fixes/`](docs/fixes/) | Documentation for resolved issues and patches |
+| 🔍 **Troubleshooting** | [`docs/troubleshooting/`](docs/troubleshooting/) | Problem-solving guides and error resolution |
+| 💾 **Database** | [`docs/database/`](docs/database/) | Database schema, migrations, and SQL scripts |
+| 📚 **Guides** | [`docs/guides/`](docs/guides/) | Quick reference guides and best practices |
+
+### Key Documents
+- [Vehicle Details Implementation](docs/implementation/VEHICLE_DETAIL_IMPLEMENTATION.md)
+- [Vehicle Sharing System](docs/implementation/VEHICLE_SHARING_IMPLEMENTATION.md)
+- [Image Upload Guide](docs/implementation/IMAGE_UPLOAD_SUMMARY.md)
+- [Platform Adaptive UI](docs/implementation/PLATFORM_ADAPTIVE_UI.md)
+- [RLS Security Guide](docs/guides/FIX_RLS_GUIDE.md)
+- [General Troubleshooting](docs/troubleshooting/TROUBLESHOOTING.md)
 
 ## Features
 
-- **User Authentication**: Secure login and registration using Supabase Auth
-- **Vehicle Management**: Add, view, and manage multiple vehicles
+- **User Authentication**: Secure login and registration using Supabase Auth with email confirmation
+- **User Roles**: Separate experiences for Customers (vehicle owners) and Mechanics
+- **Profile Management**: Complete user profiles with editable information
+- **Vehicle Management**: Add, view, edit, and manage multiple vehicles with images
+- **Vehicle Sharing**: Share vehicle access with mechanics or other users
+- **Technical Inspections**: Track Romanian ITP inspections with automatic date calculations
 - **Maintenance Records**: Track all maintenance activities with detailed information
 - **Maintenance Reminders**: Set date or mileage-based reminders
 - **Service History**: View complete maintenance history for each vehicle
-- **Push Notifications**: Get notified when maintenance is due
+- **Platform Adaptive UI**: Native iOS (Cupertino) and Android (Material) design
+- **Image Upload**: Vehicle photos stored in Supabase storage
+- **Push Notifications**: Local notifications for maintenance reminders (planned)
 
 ## Use Cases Implemented
 
-According to the use case diagram, this app implements:
-
-1. ✅ **Register/Login**: User authentication with email/password and user role selection
-2. ✅ **User Role Selection**: Choose between Customer (vehicle owner) or Mechanic
+1. ✅ **Register/Login**: User authentication with email/password and email confirmation
+2. ✅ **User Role Selection**: Choose between Customer (vehicle owner) or Mechanic during signup
 3. ✅ **Profile Creation**: Complete user profile with personal/business information
-4. ✅ **Add Vehicle**: Add vehicles with VIN, make, model, year, mileage, etc. (Customers)
-5. ✅ **View Vehicles**: Display list of registered vehicles (Customers)
-6. 🔄 **Add Maintenance Record**: Track maintenance activities (In Progress)
-7. 🔄 **View Maintenance History**: Display service history (In Progress)
-8. 🔄 **Set Maintenance Reminder**: Create alerts for future maintenance (In Progress)
-9. 🔄 **Receive Reminder Notification**: Push notifications (Planned)
-10. 🔄 **Edit/Delete Maintenance Record**: Modify existing records (Planned)
-11. ✅ **Logout**: User can sign out
+4. ✅ **Profile Management**: Edit user profile information (name, phone, etc.)
+5. ✅ **Add Vehicle**: Add vehicles with VIN, make, model, year, mileage, images, etc.
+6. ✅ **View Vehicles**: Display list of registered vehicles with images
+7. ✅ **Edit Vehicle**: Update vehicle information and images
+8. ✅ **Vehicle Sharing**: Share vehicle access with other users (mechanics, family)
+9. ✅ **Technical Inspection Tracking**: Romanian ITP inspection tracking with auto-calculation
+10. ✅ **Add Maintenance Record**: Track maintenance activities
+11. ✅ **View Maintenance History**: Display service history
+12. ✅ **Platform Adaptive UI**: Native iOS and Android designs
+13. ✅ **Mechanic Profile**: Business profile for mechanics with shop information
+14. ✅ **Appointments System**: View appointments for mechanics (UI complete)
+15. 🔄 **Set Maintenance Reminder**: Create alerts for future maintenance (In Progress)
+16. 🔄 **Receive Reminder Notification**: Push notifications (Planned)
+17. 🔄 **Edit/Delete Maintenance Record**: Modify existing records (Planned)
+18. ✅ **Logout**: User can sign out with proper data clearing
 
 ## Technology Stack
 
-- **Flutter**: Cross-platform mobile framework
-- **Supabase**: Backend-as-a-Service for authentication, database, and real-time features
-- **Provider**: State management
+- **Flutter**: Cross-platform mobile framework (iOS & Android)
+- **Dart**: Programming language
+- **Supabase**: Backend-as-a-Service
+  - Authentication with email confirmation
+  - PostgreSQL database with Row Level Security (RLS)
+  - Storage for vehicle images
+  - Real-time subscriptions
+- **Provider**: State management pattern
+- **SharedPreferences**: Local data persistence
+- **Image Picker**: Camera and gallery access
 - **Google Fonts**: Typography
 - **Email Validator**: Email validation
+- **Flutter Local Notifications**: Push notifications (planned)
 
 ## Prerequisites
 
@@ -72,144 +106,22 @@ According to the use case diagram, this app implements:
 
 ### 2. Database Schema
 
-Create the following tables in your Supabase database:
+**Note**: Complete database schema and SQL scripts are available in [`docs/database/`](docs/database/).
 
-#### Users Table
-```sql
-CREATE TABLE users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  auth_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT NOT NULL UNIQUE,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  user_type TEXT NOT NULL CHECK (user_type IN ('customer', 'mechanic')),
-  phone_number TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
+The main SQL schema file is at [`docs/database/database_schema.sql`](docs/database/database_schema.sql).
 
--- Enable RLS
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+Key tables include:
+- `users` - User profiles (customers and mechanics)
+- `mechanics` - Extended mechanic business information
+- `vehicles` - Vehicle information with images
+- `vehicle_sharing` - Vehicle access sharing system
+- `maintenance_records` - Service history
+- `maintenance_reminders` - Maintenance alerts
 
--- Create policy for users to only access their own profile
-CREATE POLICY "Users can only access their own profile" ON users
-  FOR ALL USING (auth.uid() = auth_id);
-```
-
-#### Mechanics Table
-```sql
-CREATE TABLE mechanics (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  business_name TEXT NOT NULL,
-  business_address TEXT,
-  license_number TEXT,
-  specializations TEXT[] DEFAULT '{}',
-  rating DECIMAL(3,2) DEFAULT 0,
-  total_reviews INTEGER DEFAULT 0,
-  is_verified BOOLEAN DEFAULT FALSE,
-  description TEXT,
-  hourly_rate DECIMAL(10,2),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE mechanics ENABLE ROW LEVEL SECURITY;
-
--- Create policy for mechanics to access their own profile and for customers to view mechanics
-CREATE POLICY "Mechanics can manage their own profile" ON mechanics
-  FOR ALL USING (
-    user_id IN (
-      SELECT id FROM users WHERE auth_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Anyone can view mechanic profiles" ON mechanics
-  FOR SELECT USING (true);
-```
-
-#### Vehicles Table
-```sql
-CREATE TABLE vehicles (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  make TEXT NOT NULL,
-  model TEXT NOT NULL,
-  year INTEGER NOT NULL,
-  vin TEXT UNIQUE NOT NULL,
-  current_mileage INTEGER NOT NULL,
-  license_plate TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- Enable RLS (Row Level Security)
-ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
-
--- Create policy for users to only access their own vehicles
-CREATE POLICY "Users can only access their own vehicles" ON vehicles
-  FOR ALL USING (
-    user_id IN (
-      SELECT id FROM users WHERE auth_id = auth.uid()
-    )
-  );
-```
-
-#### Maintenance Records Table
-```sql
-CREATE TABLE maintenance_records (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
-  description TEXT,
-  cost DECIMAL(10,2) NOT NULL DEFAULT 0,
-  mileage_at_service INTEGER NOT NULL,
-  service_date DATE NOT NULL,
-  service_provider TEXT,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE maintenance_records ENABLE ROW LEVEL SECURITY;
-
--- Create policy for users to access records of their own vehicles
-CREATE POLICY "Users can access records of their own vehicles" ON maintenance_records
-  FOR ALL USING (
-    vehicle_id IN (
-      SELECT id FROM vehicles WHERE user_id = auth.uid()
-    )
-  );
-```
-
-#### Maintenance Reminders Table
-```sql
-CREATE TABLE maintenance_reminders (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE CASCADE,
-  maintenance_type TEXT NOT NULL,
-  reminder_type TEXT NOT NULL CHECK (reminder_type IN ('date', 'mileage', 'both')),
-  reminder_date DATE,
-  reminder_mileage INTEGER,
-  notes TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
--- Enable RLS
-ALTER TABLE maintenance_reminders ENABLE ROW LEVEL SECURITY;
-
--- Create policy for users to access reminders of their own vehicles
-CREATE POLICY "Users can access reminders of their own vehicles" ON maintenance_reminders
-  FOR ALL USING (
-    vehicle_id IN (
-      SELECT id FROM vehicles WHERE user_id = auth.uid()
-    )
-  );
-```
+For detailed setup instructions and migration guides, see:
+- [Database Documentation](docs/database/)
+- [Migration Guide](docs/database/MIGRATION_GUIDE.md)
+- [RLS Security Guide](docs/guides/FIX_RLS_GUIDE.md)
 
 ### 3. Flutter Setup
 
@@ -231,49 +143,98 @@ CREATE POLICY "Users can access reminders of their own vehicles" ON maintenance_
 
 ```
 lib/
-├── main.dart                 # App entry point
-├── constants/                # App constants
+├── main.dart                     # App entry point
+├── constants/                    # App constants
 │   └── app_constants.dart
-├── models/                   # Data models
-│   ├── app_user.dart
-│   ├── mechanic.dart
-│   ├── vehicle.dart
-│   ├── maintenance_record.dart
-│   ├── maintenance_reminder.dart
-│   └── models.dart           # Export file
-├── providers/                # State management
-│   ├── auth_provider.dart
-│   ├── user_provider.dart
-│   └── vehicle_provider.dart
-├── screens/                  # UI screens
-│   ├── auth_wrapper.dart
-│   ├── login_screen.dart
-│   ├── signup_screen.dart
-│   ├── profile_setup_screen.dart
-│   ├── home_screen.dart
-│   └── add_vehicle_screen.dart
-├── services/                 # External services
-│   └── supabase_service.dart
-└── widgets/                  # Reusable UI components
-    └── vehicle_card.dart
+├── models/                       # Data models
+│   ├── app_user.dart            # User model (customer/mechanic)
+│   ├── mechanic.dart            # Mechanic business profile
+│   ├── vehicle.dart             # Vehicle with ITP tracking
+│   ├── vehicle_sharing.dart     # Vehicle access sharing
+│   ├── maintenance_record.dart  # Service history
+│   ├── maintenance_reminder.dart # Maintenance alerts
+│   └── models.dart              # Export file
+├── providers/                    # State management (Provider pattern)
+│   ├── auth_provider.dart       # Authentication state
+│   ├── user_provider.dart       # User profile state
+│   ├── vehicle_provider.dart    # Vehicle management state
+│   └── maintenance_provider.dart # Maintenance state
+├── screens/                      # UI screens
+│   ├── auth_wrapper.dart        # Auth flow manager
+│   ├── login_screen.dart        # Login UI
+│   ├── signup_screen.dart       # Multi-step signup
+│   ├── profile_setup_screen.dart # Profile completion
+│   ├── profile_screen.dart      # Profile management
+│   ├── main_screen.dart         # Tab navigation
+│   ├── home_screen.dart         # Vehicle list (customers)
+│   ├── my_shop_screen.dart      # Shop profile (mechanics)
+│   ├── appointments_screen.dart # Appointments (mechanics)
+│   ├── add_vehicle_screen.dart  # Add new vehicle
+│   ├── edit_vehicle_screen.dart # Edit vehicle
+│   ├── vehicle_detail_screen.dart # Vehicle details
+│   └── add_maintenance_screen.dart # Add maintenance record
+├── services/                     # External services
+│   └── supabase_service.dart    # Supabase client & operations
+├── utils/                        # Utility functions
+│   └── platform_utils.dart      # Platform detection
+└── widgets/                      # Reusable UI components
+    ├── vehicle_card.dart        # Vehicle list item
+    └── next_inspection_card.dart # ITP reminder card
+
+docs/                             # Documentation
+├── implementation/               # Feature implementations
+├── fixes/                        # Bug fixes
+├── troubleshooting/             # Problem solving
+├── database/                    # Database & SQL
+└── guides/                      # Quick references
 ```
+
+## Getting Help
+
+### Documentation
+- Start with the [Documentation Index](docs/INDEX.md) for a visual guide
+- Check [Troubleshooting](docs/troubleshooting/TROUBLESHOOTING.md) for common issues
+- Review [Implementation Guides](docs/implementation/) for feature documentation
+
+### Common Issues
+- **Email confirmation issues**: See [Email Confirmation Fix](docs/fixes/EMAIL_CONFIRMATION_FIX.md)
+- **VIN validation errors**: See [VIN Error Troubleshooting](docs/troubleshooting/VIN_ERROR_TROUBLESHOOTING.md)
+- **Database/RLS issues**: See [RLS Security Guide](docs/guides/FIX_RLS_GUIDE.md)
+- **Image upload problems**: See [Image Upload Guide](docs/implementation/IMAGE_UPLOAD_SUMMARY.md)
+
+## Next Steps
+
+Planned features for future releases:
+
+1. **Enhanced Maintenance System**
+   - Edit and delete maintenance records
+   - Advanced filtering and search
+   - Cost analytics and reports
+   
+2. **Notification System**
+   - Push notifications for maintenance reminders
+   - Email notifications
+   - In-app notification center
+
+3. **Mechanic Features**
+   - Appointment management and scheduling
+   - Customer management
+   - Invoice generation
+   
+4. **Data Export**
+   - Export maintenance history to PDF
+   - CSV export for data analysis
+   - Print-friendly reports
+
+5. **Advanced Features**
+   - Photo attachments for maintenance records
+   - Service provider directory
+   - Multi-vehicle comparison
+   - Fuel economy tracking
 
 ## MCP (Model Context Protocol) Integration
 
 The project includes MCP configuration for Supabase integration in `.vscode/mcp.json`. This enables enhanced development experience with Supabase services through VS Code.
-
-## Next Steps
-
-The following features are planned for future releases:
-
-1. **Maintenance Records Management**: Add, edit, and delete maintenance records
-2. **Maintenance History**: Detailed view of all maintenance activities
-3. **Reminder System**: Date and mileage-based maintenance reminders
-4. **Push Notifications**: Local notifications for maintenance reminders
-5. **Vehicle Details Screen**: Comprehensive vehicle information and statistics
-6. **Data Export**: Export maintenance history to PDF or CSV
-7. **Photo Attachments**: Add photos to maintenance records
-8. **Service Provider Directory**: Manage preferred service providers
 
 ## Contributing
 
