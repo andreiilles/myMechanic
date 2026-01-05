@@ -50,6 +50,17 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   final List<int> _durations = [30, 60, 90, 120, 180, 240];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.currentUser?.id != null) {
+        context.read<VehicleProvider>().loadVehicles(userProvider.currentUser!.id!);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _serviceTypeController.dispose();
     _descriptionController.dispose();
@@ -125,24 +136,56 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
     if (success && mounted) {
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Appointment booked successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (PlatformUtils.isIOS) {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('Success'),
+            content: const Text('Appointment booked successfully!'),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Appointment booked successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } else if (mounted) {
       _showError(appointmentProvider.error ?? 'Failed to book appointment');
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
+    if (PlatformUtils.isIOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -160,7 +203,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 ),
         ),
         child: SafeArea(
-          child: _buildForm(),
+          child: Material(
+            child: _buildForm(),
+          ),
         ),
       );
     }

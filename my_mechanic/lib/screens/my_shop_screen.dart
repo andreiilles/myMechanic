@@ -379,7 +379,7 @@ class MyShopScreen extends StatelessWidget {
             ),
           const SizedBox(height: 16),
 
-          // Action Buttons
+          // Edit Shop Info Button
           if (PlatformUtils.isIOS)
             CupertinoButton.filled(
               onPressed: () {

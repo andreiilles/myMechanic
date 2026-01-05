@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../models/mechanic.dart';
 import '../utils/platform_utils.dart';
+import 'book_appointment_screen.dart';
 
 class ShopDetailScreen extends StatelessWidget {
   final Mechanic mechanic;
@@ -319,7 +320,7 @@ class ShopDetailScreen extends StatelessWidget {
           if (PlatformUtils.isIOS)
             CupertinoButton.filled(
               onPressed: mechanic.isAcceptingClients
-                  ? () => _bookAppointment(context)
+                  ? () => _bookAppointment(context, mechanic)
                   : null,
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -335,7 +336,7 @@ class ShopDetailScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: mechanic.isAcceptingClients
-                    ? () => _bookAppointment(context)
+                    ? () => _bookAppointment(context, mechanic)
                     : null,
                 icon: const Icon(Icons.calendar_today),
                 label: const Text('Book Appointment'),
@@ -367,22 +368,27 @@ class ShopDetailScreen extends StatelessWidget {
     );
   }
 
-  void _bookAppointment(BuildContext context) {
-    // TODO: Implement appointment booking
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Book Appointment'),
-        content: const Text(
-          'Appointment booking feature coming soon! You can contact the shop directly using the phone number provided.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+  void _bookAppointment(BuildContext context, mechanic) {
+    if (PlatformUtils.isIOS) {
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (context) => BookAppointmentScreen(
+            mechanicId: mechanic.userId,
+            mechanicName: mechanic.businessName,
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BookAppointmentScreen(
+            mechanicId: mechanic.userId,
+            mechanicName: mechanic.businessName,
+          ),
+        ),
+      );
+    }
   }
 }

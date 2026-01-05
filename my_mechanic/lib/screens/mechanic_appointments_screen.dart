@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../utils/platform_utils.dart';
+import '../models/appointment.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/user_provider.dart';
-import '../models/appointment.dart';
-import '../models/app_user.dart';
-import '../services/notification_service.dart';
+import '../utils/platform_utils.dart';
 import 'appointment_detail_screen.dart';
 
-class AppointmentsScreen extends StatefulWidget {
-  const AppointmentsScreen({super.key});
+class MechanicAppointmentsScreen extends StatefulWidget {
+  const MechanicAppointmentsScreen({super.key});
 
   @override
-  State<AppointmentsScreen> createState() => _AppointmentsScreenState();
+  State<MechanicAppointmentsScreen> createState() => _MechanicAppointmentsScreenState();
 }
 
-class _AppointmentsScreenState extends State<AppointmentsScreen> {
-  String _selectedFilter = 'all';
+class _MechanicAppointmentsScreenState extends State<MechanicAppointmentsScreen> {
+  AppointmentStatus? _selectedFilter;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await NotificationService().initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAppointments();
     });
   }
@@ -40,20 +37,18 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   Future<void> _loadAppointments() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
-    
-    if (userProvider.currentUser != null) {
-      final isMechanic = userProvider.currentUser!.userType == UserType.mechanic;
-      await appointmentProvider.loadAppointments(
-        userProvider.currentUser!.id!,
-        asMechanic: isMechanic,
-      );
+    final userId = context.read<UserProvider>().currentUser?.id;
+    debugPrint('MechanicAppointmentsScreen: userId = $userId');
+    if (userId != null) {
+      await context.read<AppointmentProvider>().loadAppointments(userId, asMechanic: true);
       
-      appointmentProvider.subscribeToAppointments(
-        userProvider.currentUser!.id!,
-        asMechanic: isMechanic,
-      );
+      // Subscribe to real-time updates (mechanics don't get notifications)
+      context.read<AppointmentProvider>().subscribeToAppointments(userId, asMechanic: true);
+      
+      final count = context.read<AppointmentProvider>().appointments.length;
+      debugPrint('MechanicAppointmentsScreen: loaded $count appointments');
+    } else {
+      debugPrint('MechanicAppointmentsScreen: userId is null!');
     }
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -61,26 +56,16 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
   @override
   void dispose() {
-    final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
-    appointmentProvider.unsubscribeFromAppointments();
+    // Unsubscribe when leaving screen
+    context.read<AppointmentProvider>().unsubscribeFromAppointments();
     super.dispose();
   }
 
   List<Appointment> _getFilteredAppointments(List<Appointment> appointments) {
-    if (_selectedFilter == 'all') return appointments;
-    
-    return appointments.where((appointment) {
-      switch (_selectedFilter) {
-        case 'pending':
-          return appointment.status == AppointmentStatus.pending;
-        case 'confirmed':
-          return appointment.status == AppointmentStatus.confirmed;
-        case 'completed':
-          return appointment.status == AppointmentStatus.completed;
-        default:
-          return true;
-      }
-    }).toList();
+    if (_selectedFilter == null) {
+      return appointments;
+    }
+    return appointments.where((a) => a.status == _selectedFilter).toList();
   }
 
   @override
@@ -130,9 +115,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
         return Column(
           children: [
+            // Filter Chips
             _buildFilterChips(),
             const Divider(height: 1),
 
+            // Appointments List
             Expanded(
               child: appointments.isEmpty
                   ? _buildEmptyState()
@@ -160,26 +147,32 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          _buildFilterChip('All', 'all'),
+          _buildFilterChip('All', null),
           const SizedBox(width: 8),
-          _buildFilterChip('Pending', 'pending'),
+          _buildFilterChip('Pending', AppointmentStatus.pending),
           const SizedBox(width: 8),
-          _buildFilterChip('Confirmed', 'confirmed'),
+          _buildFilterChip('Accepted', AppointmentStatus.accepted),
           const SizedBox(width: 8),
-          _buildFilterChip('Completed', 'completed'),
+          _buildFilterChip('Confirmed', AppointmentStatus.confirmed),
+          const SizedBox(width: 8),
+          _buildFilterChip('In Progress', AppointmentStatus.inProgress),
+          const SizedBox(width: 8),
+          _buildFilterChip('Completed', AppointmentStatus.completed),
+          const SizedBox(width: 8),
+          _buildFilterChip('Declined', AppointmentStatus.declined),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _selectedFilter == value;
+  Widget _buildFilterChip(String label, AppointmentStatus? status) {
+    final isSelected = _selectedFilter == status;
 
     if (PlatformUtils.isIOS) {
       return GestureDetector(
         onTap: () {
           setState(() {
-            _selectedFilter = value;
+            _selectedFilter = status;
           });
         },
         child: Container(
@@ -206,7 +199,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       selected: isSelected,
       onSelected: (selected) {
         setState(() {
-          _selectedFilter = value;
+          _selectedFilter = selected ? status : null;
         });
       },
     );
@@ -224,16 +217,16 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _selectedFilter == 'all'
+            _selectedFilter == null
                 ? 'No appointments yet'
-                : 'No $_selectedFilter appointments',
+                : 'No ${_selectedFilter!.displayName.toLowerCase()} appointments',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: Colors.grey,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Your appointments will appear here',
+            'Appointments from clients will appear here',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.grey,
             ),
@@ -254,7 +247,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               CupertinoPageRoute(
                 builder: (context) => AppointmentDetailScreen(
                   appointment: appointment,
-                  isMechanic: false,
+                  isMechanic: true,
                 ),
               ),
             );
@@ -264,7 +257,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               MaterialPageRoute(
                 builder: (context) => AppointmentDetailScreen(
                   appointment: appointment,
-                  isMechanic: false,
+                  isMechanic: true,
                 ),
               ),
             );
@@ -303,6 +296,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
               const SizedBox(height: 12),
 
+              // Date & Time
               Row(
                 children: [
                   Icon(
@@ -330,6 +324,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
               const SizedBox(height: 8),
 
+              // Vehicle Info
               Row(
                 children: [
                   Icon(
@@ -347,6 +342,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 ],
               ),
 
+              // Description preview
               if (appointment.description != null && appointment.description!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -359,25 +355,28 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 ),
               ],
 
-              if (appointment.status == AppointmentStatus.proposed && appointment.proposedDate != null) ...[
-                const SizedBox(height: 12),
+              // Proposed date indicator
+              if (appointment.proposedDate != null) ...[
+                const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: Colors.orange[50],
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                      Icon(
+                        PlatformUtils.isIOS ? CupertinoIcons.info : Icons.info_outline,
+                        size: 16,
+                        color: Colors.orange[700],
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Alternative date proposed',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            fontSize: 12,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Colors.orange[700],
                             fontWeight: FontWeight.w500,
                           ),
                         ),

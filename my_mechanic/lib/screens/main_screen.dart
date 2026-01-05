@@ -10,6 +10,7 @@ import 'find_shops_screen.dart';
 import 'profile_screen.dart';
 import 'my_shop_screen.dart';
 import 'appointments_screen.dart';
+import 'mechanic_appointments_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -30,6 +31,7 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> customerScreens = [
       DashboardScreen(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
       const FindShopsScreen(),
+      const AppointmentsScreen(),
       const VehiclesScreen(),
       const ProfileScreen(),
     ];
@@ -37,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> mechanicScreens = [
       DashboardScreen(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
       const MyShopScreen(),
-      const AppointmentsScreen(),
+      const MechanicAppointmentsScreen(),
       const ProfileScreen(),
     ];
 
@@ -90,6 +92,11 @@ class _MainScreenState extends State<MainScreen> {
         label: 'Find Shops',
       ),
       BottomNavigationBarItem(
+        icon: Icon(CupertinoIcons.calendar),
+        activeIcon: Icon(CupertinoIcons.calendar_badge_plus),
+        label: 'Appointments',
+      ),
+      BottomNavigationBarItem(
         icon: Icon(CupertinoIcons.car),
         activeIcon: Icon(CupertinoIcons.car_fill),
         label: 'Vehicles',
@@ -140,6 +147,11 @@ class _MainScreenState extends State<MainScreen> {
         icon: Icon(Icons.map_outlined),
         selectedIcon: Icon(Icons.map),
         label: 'Find Shops',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.event_note_outlined),
+        selectedIcon: Icon(Icons.event_note),
+        label: 'Appointments',
       ),
       NavigationDestination(
         icon: Icon(Icons.directions_car_outlined),

@@ -1,9 +1,12 @@
 enum AppointmentStatus {
-  pending('Pending'),
-  confirmed('Confirmed'),
-  inProgress('In Progress'),
-  completed('Completed'),
-  cancelled('Cancelled');
+  pending('Pending'),           // Initial request from client
+  accepted('Accepted'),          // Mechanic accepted the request
+  declined('Declined'),          // Mechanic declined
+  proposed('Date Proposed'),     // Mechanic proposed different date
+  confirmed('Confirmed'),        // Client confirmed (or accepted proposal)
+  inProgress('In Progress'),     // Service started
+  completed('Completed'),        // Service completed
+  cancelled('Cancelled');        // Cancelled by either party
 
   const AppointmentStatus(this.displayName);
   final String displayName;
@@ -23,8 +26,16 @@ class Appointment {
   final double? finalCost;
   final String? notes;
   final String? cancellationReason;
+  final DateTime? proposedDate;  // Mechanic's proposed alternative date
+  final String? mechanicResponse;  // Mechanic's response message
   final DateTime createdAt;
   final DateTime updatedAt;
+  
+  // Related data loaded from joins
+  final Map<String, dynamic>? customer;
+  final Map<String, dynamic>? mechanic;
+  final Map<String, dynamic>? vehicle;
+  final Map<String, dynamic>? mechanicShop;
 
   Appointment({
     this.id,
@@ -40,25 +51,26 @@ class Appointment {
     this.finalCost,
     this.notes,
     this.cancellationReason,
+    this.proposedDate,
+    this.mechanicResponse,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.customer,
+    this.mechanic,
+    this.vehicle,
+    this.mechanicShop,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toJson({bool excludeId = false}) {
-    final json = {
+    final json = <String, dynamic>{
       'customer_id': customerId,
       'mechanic_id': mechanicId,
       'vehicle_id': vehicleId,
       'appointment_date': appointmentDate.toIso8601String(),
       'duration_minutes': durationMinutes,
       'service_type': serviceType,
-      'description': description,
       'status': status.name,
-      'estimated_cost': estimatedCost,
-      'final_cost': finalCost,
-      'notes': notes,
-      'cancellation_reason': cancellationReason,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -66,6 +78,15 @@ class Appointment {
     if (!excludeId && id != null) {
       json['id'] = id;
     }
+    
+    // Only include optional fields if they have values
+    if (description != null) json['description'] = description;
+    if (estimatedCost != null) json['estimated_cost'] = estimatedCost;
+    if (finalCost != null) json['final_cost'] = finalCost;
+    if (notes != null) json['notes'] = notes;
+    if (cancellationReason != null) json['cancellation_reason'] = cancellationReason;
+    if (proposedDate != null) json['proposed_date'] = proposedDate!.toIso8601String();
+    if (mechanicResponse != null) json['mechanic_response'] = mechanicResponse;
     
     return json;
   }
@@ -88,8 +109,18 @@ class Appointment {
       finalCost: json['final_cost']?.toDouble(),
       notes: json['notes'],
       cancellationReason: json['cancellation_reason'],
+      proposedDate: json['proposed_date'] != null 
+          ? DateTime.parse(json['proposed_date']) 
+          : null,
+      mechanicResponse: json['mechanic_response'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+      customer: json['customer'],
+      mechanic: json['mechanic'],
+      vehicle: json['vehicles'] is List && (json['vehicles'] as List).isNotEmpty 
+          ? (json['vehicles'] as List).first 
+          : json['vehicle'],
+      mechanicShop: json['mechanic_shop'],
     );
   }
 
@@ -107,6 +138,8 @@ class Appointment {
     double? finalCost,
     String? notes,
     String? cancellationReason,
+    DateTime? proposedDate,
+    String? mechanicResponse,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -124,6 +157,8 @@ class Appointment {
       finalCost: finalCost ?? this.finalCost,
       notes: notes ?? this.notes,
       cancellationReason: cancellationReason ?? this.cancellationReason,
+      proposedDate: proposedDate ?? this.proposedDate,
+      mechanicResponse: mechanicResponse ?? this.mechanicResponse,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
