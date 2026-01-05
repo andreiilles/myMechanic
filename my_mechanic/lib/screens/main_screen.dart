@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../utils/platform_utils.dart';
 import '../providers/user_provider.dart';
 import '../models/app_user.dart';
-import 'home_screen.dart';
+import 'dashboard_screen.dart';
 import 'vehicles_screen.dart';
 import 'find_shops_screen.dart';
 import 'profile_screen.dart';
@@ -27,18 +27,18 @@ class _MainScreenState extends State<MainScreen> {
     final isMechanic = userProvider.currentUser?.userType == UserType.mechanic;
 
     // Different screens for mechanics vs customers
-    final List<Widget> customerScreens = const [
-      HomeScreen(),
-      FindShopsScreen(),
-      VehiclesScreen(),
-      ProfileScreen(),
+    final List<Widget> customerScreens = [
+      DashboardScreen(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
+      const FindShopsScreen(),
+      const VehiclesScreen(),
+      const ProfileScreen(),
     ];
 
-    final List<Widget> mechanicScreens = const [
-      HomeScreen(),
-      MyShopScreen(),
-      AppointmentsScreen(),
-      ProfileScreen(),
+    final List<Widget> mechanicScreens = [
+      DashboardScreen(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
+      const MyShopScreen(),
+      const AppointmentsScreen(),
+      const ProfileScreen(),
     ];
 
     final screens = isMechanic ? mechanicScreens : customerScreens;

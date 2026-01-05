@@ -369,21 +369,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               'Current Mileage',
               '${widget.vehicle.currentMileage.toStringAsFixed(0)} km',
             ),
-            if (widget.vehicle.lastTechnicalInspection != null) ...[
+            if (widget.vehicle.lastTechnicalInspection != null)
               _buildInfoRow(
                 'Last Inspection',
                 _formatDate(widget.vehicle.lastTechnicalInspection!),
               ),
-              if (widget.vehicle.nextTechnicalInspection != null)
-                _buildInfoRow(
-                  'Next Inspection',
-                  _formatDate(widget.vehicle.nextTechnicalInspection!),
-                ),
-              _buildInfoRow(
-                'Inspection Interval',
-                widget.vehicle.inspectionIntervalDescription,
-              ),
-            ],
             _buildInfoRow(
               'Added',
               _formatDate(widget.vehicle.createdAt),

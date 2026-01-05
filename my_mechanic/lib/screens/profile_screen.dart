@@ -430,7 +430,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (confirmed == true) {
         // Clear all provider data before signing out
         context.read<UserProvider>().clearUserData();
-        context.read<VehicleProvider>().clearVehicleData();
+        // Clear vehicle data by loading empty list
+        context.read<VehicleProvider>().loadVehicles('');
         context.read<MaintenanceProvider>().clearMaintenanceData();
         context.read<AuthProvider>().signOut();
       }

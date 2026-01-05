@@ -213,9 +213,11 @@ class _EditShopScreenState extends State<EditShopScreen> {
                       child: const Text('Cancel'),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const Text(
+                    Text(
                       'Select Specializations',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     CupertinoButton(
                       padding: EdgeInsets.zero,
@@ -400,9 +402,8 @@ class _EditShopScreenState extends State<EditShopScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'We\'ll automatically find the coordinates for map display',
-              style: TextStyle(
-                fontSize: 12,
+              'We will automatically find the coordinates for map display',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
                 fontStyle: FontStyle.italic,
               ),
@@ -495,9 +496,8 @@ class _EditShopScreenState extends State<EditShopScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Tap to add specializations',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[600],
-                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -523,8 +523,7 @@ class _EditShopScreenState extends State<EditShopScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Tell customers about your shop, experience, and what makes you unique',
-              style: TextStyle(
-                fontSize: 12,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
                 fontStyle: FontStyle.italic,
               ),
@@ -542,7 +541,7 @@ class _EditShopScreenState extends State<EditShopScreen> {
                 _isAcceptingClients
                     ? 'Your shop is visible to customers'
                     : 'Your shop is hidden from new bookings',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
               secondary: Icon(
                 _isAcceptingClients
@@ -587,8 +586,7 @@ class _EditShopScreenState extends State<EditShopScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         title,
-        style: TextStyle(
-          fontSize: 18,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
           color: Theme.of(context).colorScheme.primary,
         ),
@@ -618,8 +616,7 @@ class _EditShopScreenState extends State<EditShopScreen> {
                   const SizedBox(width: 8),
                   Text(
                     label,
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: CupertinoColors.systemGrey,
                     ),
                   ),

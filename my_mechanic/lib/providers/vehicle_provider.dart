@@ -31,31 +31,55 @@ class VehicleProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      // Load vehicles through the vehicle_access junction table
-      final response = await SupabaseService.client
+      // Load vehicles owned by user
+      final ownedVehiclesResponse = await SupabaseService.client
+          .from('vehicles')
+          .select()
+          .eq('owner_id', userId)
+          .order('created_at', ascending: false);
+
+      // Load vehicles with shared access
+      final sharedAccessResponse = await SupabaseService.client
           .from('vehicle_access')
           .select('vehicle_id')
           .eq('user_id', userId);
 
-      final vehicleIds = (response as List)
+      final sharedVehicleIds = (sharedAccessResponse as List)
           .map((row) => row['vehicle_id'] as String)
           .toList();
 
-      if (vehicleIds.isEmpty) {
-        _vehicles = [];
-        notifyListeners();
-        return;
+      List<Vehicle> sharedVehicles = [];
+      if (sharedVehicleIds.isNotEmpty) {
+        final sharedVehiclesResponse = await SupabaseService.client
+            .from('vehicles')
+            .select()
+            .inFilter('id', sharedVehicleIds)
+            .order('created_at', ascending: false);
+        
+        sharedVehicles = (sharedVehiclesResponse as List)
+            .map((json) => Vehicle.fromJson(json))
+            .toList();
       }
 
-      final vehiclesResponse = await SupabaseService.client
-          .from('vehicles')
-          .select()
-          .inFilter('id', vehicleIds)
-          .order('created_at', ascending: false);
-
-      _vehicles = (vehiclesResponse as List)
+      // Combine owned and shared vehicles
+      final ownedVehicles = (ownedVehiclesResponse as List)
           .map((json) => Vehicle.fromJson(json))
           .toList();
+      
+      // Remove duplicates - use a Map with vehicle ID as key
+      final vehicleMap = <String, Vehicle>{};
+      for (final vehicle in ownedVehicles) {
+        if (vehicle.id != null) {
+          vehicleMap[vehicle.id!] = vehicle;
+        }
+      }
+      for (final vehicle in sharedVehicles) {
+        if (vehicle.id != null && !vehicleMap.containsKey(vehicle.id!)) {
+          vehicleMap[vehicle.id!] = vehicle;
+        }
+      }
+      
+      _vehicles = vehicleMap.values.toList();
 
       notifyListeners();
     } catch (e) {
@@ -74,133 +98,22 @@ class VehicleProvider with ChangeNotifier {
       debugPrint('=== ADD VEHICLE FLOW STARTED ===');
       debugPrint('User ID: $userId');
       debugPrint('VIN: ${vehicle.vin}');
-      debugPrint('VIN length: ${vehicle.vin.length}');
-      debugPrint('VIN trimmed: "${vehicle.vin.trim()}"');
-      debugPrint('Checking for existing vehicle with VIN: ${vehicle.vin}');
       
-      // First, check if a vehicle with this VIN already exists
-      final existingVehicle = await SupabaseService.client
-          .from('vehicles')
-          .select()
-          .eq('vin', vehicle.vin)
-          .maybeSingle();
+      // Create vehicle with owner_id set
+      final vehicleData = vehicle.toJson(excludeId: true);
+      vehicleData['owner_id'] = userId;  // Set the owner
       
-      debugPrint('Query result: ${existingVehicle != null ? "FOUND existing vehicle" : "NO existing vehicle"}');
-      if (existingVehicle != null) {
-        debugPrint('Existing vehicle data: $existingVehicle');
-      }
-
-      if (existingVehicle != null) {
-        debugPrint('Found existing vehicle with VIN: ${vehicle.vin}, ID: ${existingVehicle['id']}');
-        
-        // Vehicle exists, check if user is already linked
-        final existingLink = await SupabaseService.client
-            .from('vehicle_access')
-            .select()
-            .eq('user_id', userId)
-            .eq('vehicle_id', existingVehicle['id'])
-            .maybeSingle();
-
-        if (existingLink != null) {
-          debugPrint('User already has access to this vehicle in database');
-          
-          // Check if vehicle is in local list
-          final isInLocalList = _vehicles.any((v) => v.id == existingVehicle['id']);
-          debugPrint('Vehicle in local list: $isInLocalList');
-          
-          if (!isInLocalList) {
-            debugPrint('Vehicle not in local list, adding it now (sync issue fix)');
-            final linkedVehicle = Vehicle.fromJson(existingVehicle);
-            _vehicles.insert(0, linkedVehicle);
-            notifyListeners();
-            return AddVehicleResult(success: true, wasLinked: true);
-          }
-          
-          debugPrint('Vehicle already in local list - true duplicate');
-          _setError('You already have access to this vehicle.');
-          return AddVehicleResult(success: false, error: 'You already have access to this vehicle.');
-        }
-
-        debugPrint('Linking user to existing vehicle');
-        // Link user to existing vehicle
-        try {
-          await SupabaseService.client
-              .from('vehicle_access')
-              .insert({
-                'user_id': userId,
-                'vehicle_id': existingVehicle['id'],
-                'access_level': 'edit',
-                'granted_by': userId,
-              });
-        } on PostgrestException catch (e) {
-          if (e.code == '23505' && e.message.contains('vehicle_access_vehicle_id_user_id_key')) {
-            // Link already exists (race condition), just add to local list
-            debugPrint('Link already exists in database (race condition), adding to local list');
-            final linkedVehicle = Vehicle.fromJson(existingVehicle);
-            if (!_vehicles.any((v) => v.id == existingVehicle['id'])) {
-              _vehicles.insert(0, linkedVehicle);
-              notifyListeners();
-            }
-            return AddVehicleResult(success: true, wasLinked: true);
-          }
-          rethrow;
-        }
-
-        // Load the vehicle into the list
-        final linkedVehicle = Vehicle.fromJson(existingVehicle);
-        _vehicles.insert(0, linkedVehicle);
-        notifyListeners();
-        
-        debugPrint('Successfully linked to existing vehicle');
-        return AddVehicleResult(success: true, wasLinked: true);
-      }
-
-      debugPrint('No existing vehicle found, creating new vehicle with VIN: ${vehicle.vin}');
-      // Vehicle doesn't exist, create new one
-      final vehicleData = vehicle.copyWith(ownerId: userId);
-      
-      debugPrint('Adding new vehicle: ${vehicleData.toJson(excludeId: true)}');
+      debugPrint('Creating new vehicle: $vehicleData');
       
       final response = await SupabaseService.client
           .from('vehicles')
-          .insert(vehicleData.toJson(excludeId: true))
+          .insert(vehicleData)
           .select()
           .single();
 
       final newVehicle = Vehicle.fromJson(response);
       
       debugPrint('Vehicle created successfully with ID: ${newVehicle.id}');
-      
-      // Link will be created automatically by database trigger
-      // Verify the link was created
-      final linkCheck = await SupabaseService.client
-          .from('vehicle_access')
-          .select()
-          .eq('user_id', userId)
-          .eq('vehicle_id', newVehicle.id!)
-          .maybeSingle();
-      
-      if (linkCheck == null) {
-        debugPrint('WARNING: Trigger did not create vehicle_access link, creating manually');
-        try {
-          await SupabaseService.client
-              .from('vehicle_access')
-              .insert({
-                'user_id': userId,
-                'vehicle_id': newVehicle.id!,
-                'access_level': 'owner',
-                'granted_by': userId,
-              });
-        } on PostgrestException catch (e) {
-          if (e.code == '23505' && e.message.contains('vehicle_access_vehicle_id_user_id_key')) {
-            debugPrint('Link already exists (created by trigger or race condition), continuing...');
-          } else {
-            rethrow;
-          }
-        }
-      } else {
-        debugPrint('Trigger successfully created vehicle_access link');
-      }
       
       // Add to our local list if not already there
       if (!_vehicles.any((v) => v.id == newVehicle.id)) {
@@ -212,15 +125,10 @@ class VehicleProvider with ChangeNotifier {
       // Handle PostgreSQL errors
       String errorMessage;
       if (e.code == '23505') {
-        // Check if it's a VIN conflict or vehicle_access conflict
-        if (e.message.contains('vehicle_access_vehicle_id_user_id_key')) {
-          // This means user is already linked to the vehicle
-          errorMessage = 'You already have access to this vehicle.';
-        } else if (e.message.contains('vehicles_vin_key')) {
-          // This is a VIN conflict
-          errorMessage = 'This VIN already exists. Please check the VIN number.';
+        if (e.message.contains('vehicles_vin_key')) {
+          // This is a VIN conflict - vehicle with this VIN already exists
+          errorMessage = 'A vehicle with this VIN already exists. Please check the VIN number.';
         } else {
-          // Generic duplicate key error
           errorMessage = 'This vehicle already exists in the system.';
         }
       } else {
@@ -304,20 +212,33 @@ class VehicleProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      // Check how many users are linked to this vehicle
-      final userLinks = await SupabaseService.client
-          .from('vehicle_access')
-          .select()
-          .eq('vehicle_id', vehicleId);
+      // Get the vehicle to check ownership
+      final vehicle = await SupabaseService.client
+          .from('vehicles')
+          .select('owner_id')
+          .eq('id', vehicleId)
+          .single();
 
-      if ((userLinks as List).length == 1) {
-        // Last user - delete the vehicle entirely
-        await SupabaseService.client
-            .from('vehicles')
-            .delete()
-            .eq('id', vehicleId);
+      if (vehicle['owner_id'] == userId) {
+        // User is the owner - check if vehicle is shared
+        final sharedAccess = await SupabaseService.client
+            .from('vehicle_access')
+            .select()
+            .eq('vehicle_id', vehicleId);
+
+        if ((sharedAccess as List).isEmpty) {
+          // Not shared - delete the vehicle entirely
+          await SupabaseService.client
+              .from('vehicles')
+              .delete()
+              .eq('id', vehicleId);
+        } else {
+          // Vehicle is shared - cannot delete
+          _setError('Cannot delete a vehicle that is shared with others');
+          return false;
+        }
       } else {
-        // Multiple users - just remove this user's link
+        // User is not the owner - just remove their access
         await SupabaseService.client
             .from('vehicle_access')
             .delete()
@@ -340,12 +261,13 @@ class VehicleProvider with ChangeNotifier {
   // Check if vehicle is shared with other users
   Future<bool> isVehicleShared(String vehicleId) async {
     try {
-      final userLinks = await SupabaseService.client
+      final sharedAccess = await SupabaseService.client
           .from('vehicle_access')
           .select()
           .eq('vehicle_id', vehicleId);
 
-      return (userLinks as List).length > 1;
+      // Vehicle is considered "shared" only when there are 2 or more users with access
+      return (sharedAccess as List).length > 1;
     } catch (e) {
       debugPrint('Error checking if vehicle is shared: $e');
       return false;
@@ -355,12 +277,33 @@ class VehicleProvider with ChangeNotifier {
   // Get users who have access to a vehicle
   Future<List<Map<String, dynamic>>> getVehicleUsers(String vehicleId) async {
     try {
-      final response = await SupabaseService.client
+      // Get the owner
+      final vehicle = await SupabaseService.client
+          .from('vehicles')
+          .select('owner_id, users!vehicles_owner_id_fkey(first_name, last_name, email)')
+          .eq('id', vehicleId)
+          .single();
+
+      final users = <Map<String, dynamic>>[];
+      
+      // Add owner
+      if (vehicle['users'] != null) {
+        users.add({
+          'user_id': vehicle['owner_id'],
+          'access_level': 'owner',
+          ...vehicle['users'] as Map<String, dynamic>,
+        });
+      }
+
+      // Get users with shared access - specify which FK relationship to use
+      final sharedAccess = await SupabaseService.client
           .from('vehicle_access')
-          .select('user_id, access_level, users(first_name, last_name, email)')
+          .select('user_id, access_level, users!vehicle_access_user_id_fkey(first_name, last_name, email)')
           .eq('vehicle_id', vehicleId);
 
-      return (response as List).cast<Map<String, dynamic>>();
+      users.addAll((sharedAccess as List).cast<Map<String, dynamic>>());
+      
+      return users;
     } catch (e) {
       debugPrint('Error getting vehicle users: $e');
       return [];
@@ -390,12 +333,6 @@ class VehicleProvider with ChangeNotifier {
   }
 
   void clearError() {
-    _clearError();
-    notifyListeners();
-  }
-
-  void clearVehicleData() {
-    _vehicles.clear();
     _clearError();
     notifyListeners();
   }

@@ -22,7 +22,7 @@ class _ShareVehicleDialogState extends State<ShareVehicleDialog> {
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
-  String _selectedRelationship = 'family_member';
+  String _selectedAccessLevel = 'edit';
 
   @override
   void dispose() {
@@ -60,14 +60,14 @@ class _ShareVehicleDialogState extends State<ShareVehicleDialog> {
       final userId = response['id'] as String;
       
       // Check if user already has access
-      final existingLink = await SupabaseService.client
-          .from('user_vehicles')
+      final existingAccess = await SupabaseService.client
+          .from('vehicle_access')
           .select()
           .eq('user_id', userId)
           .eq('vehicle_id', widget.vehicle.id!)
           .maybeSingle();
 
-      if (existingLink != null) {
+      if (existingAccess != null) {
         setState(() {
           _errorMessage = 'This user already has access to this vehicle';
           _isLoading = false;
@@ -75,13 +75,24 @@ class _ShareVehicleDialogState extends State<ShareVehicleDialog> {
         return;
       }
 
+      // Get current user id to set as granted_by
+      final currentUser = SupabaseService.client.auth.currentUser;
+      if (currentUser == null) {
+        setState(() {
+          _errorMessage = 'You must be logged in to share a vehicle';
+          _isLoading = false;
+        });
+        return;
+      }
+
       // Add user to vehicle
       await SupabaseService.client
-          .from('user_vehicles')
+          .from('vehicle_access')
           .insert({
             'user_id': userId,
             'vehicle_id': widget.vehicle.id!,
-            'relationship': _selectedRelationship,
+            'access_level': _selectedAccessLevel,
+            'granted_by': currentUser.id,
           });
 
       setState(() {
@@ -194,46 +205,46 @@ class _ShareVehicleDialogState extends State<ShareVehicleDialog> {
                   ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Relationship',
+                  'Access Level',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
                 if (PlatformUtils.isIOS)
                   CupertinoSegmentedControl<String>(
-                    groupValue: _selectedRelationship,
+                    groupValue: _selectedAccessLevel,
                     onValueChanged: (value) {
-                      setState(() => _selectedRelationship = value);
+                      setState(() => _selectedAccessLevel = value);
                     },
                     children: const {
-                      'family_member': Padding(
+                      'view': Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: Text('Family', style: TextStyle(fontSize: 12)),
+                        child: Text('View Only', style: TextStyle(fontSize: 12)),
                       ),
-                      'shared': Padding(
+                      'edit': Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: Text('Friend', style: TextStyle(fontSize: 12)),
+                        child: Text('Can Edit', style: TextStyle(fontSize: 12)),
                       ),
                     },
                   )
                 else
                   DropdownButtonFormField<String>(
-                    value: _selectedRelationship,
+                    value: _selectedAccessLevel,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                     ),
                     items: const [
                       DropdownMenuItem(
-                        value: 'family_member',
-                        child: Text('Family Member'),
+                        value: 'view',
+                        child: Text('View Only'),
                       ),
                       DropdownMenuItem(
-                        value: 'shared',
-                        child: Text('Friend/Shared'),
+                        value: 'edit',
+                        child: Text('Can Edit'),
                       ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
-                        setState(() => _selectedRelationship = value);
+                        setState(() => _selectedAccessLevel = value);
                       }
                     },
                   ),

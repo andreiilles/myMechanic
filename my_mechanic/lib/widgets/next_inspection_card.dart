@@ -13,14 +13,23 @@ class NextInspectionCard extends StatelessWidget {
   });
 
   Vehicle? _getNextInspectionVehicle() {
+    // Since next inspection date is not in database, calculate from last inspection
+    // Assume annual inspection (365 days)
     final now = DateTime.now();
     Vehicle? nextVehicle;
     DateTime? earliestDate;
 
     for (final vehicle in vehicles) {
-      final nextInspection = vehicle.nextTechnicalInspection;
+      final lastInspection = vehicle.lastTechnicalInspection;
       
-      if (nextInspection != null) {
+      if (lastInspection != null) {
+        // Calculate next inspection as 1 year from last
+        final nextInspection = DateTime(
+          lastInspection.year + 1,
+          lastInspection.month,
+          lastInspection.day,
+        );
+        
         // Only consider future or today's inspections
         if (nextInspection.isAfter(now.subtract(const Duration(days: 1)))) {
           if (earliestDate == null || nextInspection.isBefore(earliestDate)) {
@@ -82,11 +91,17 @@ class NextInspectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final nextVehicle = _getNextInspectionVehicle();
 
-    if (nextVehicle == null || nextVehicle.nextTechnicalInspection == null) {
+    if (nextVehicle == null || nextVehicle.lastTechnicalInspection == null) {
       return const SizedBox.shrink();
     }
 
-    final inspectionDate = nextVehicle.nextTechnicalInspection!;
+    // Calculate next inspection as 1 year from last
+    final lastInspection = nextVehicle.lastTechnicalInspection!;
+    final inspectionDate = DateTime(
+      lastInspection.year + 1,
+      lastInspection.month,
+      lastInspection.day,
+    );
     final daysUntil = _getDaysUntilInspection(inspectionDate);
     final urgencyColor = _getUrgencyColor(daysUntil);
     final urgencyIcon = _getUrgencyIcon(daysUntil);
@@ -181,7 +196,7 @@ class NextInspectionCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    nextVehicle.inspectionIntervalDescription,
+                    'Annual (1 year)',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.blue[800],

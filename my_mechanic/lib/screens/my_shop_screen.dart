@@ -186,47 +186,6 @@ class MyShopScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Specializations Card
-          if (mechanic.specializations.isNotEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.wrench_fill : Icons.build,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Specializations',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: mechanic.specializations.map((spec) {
-                        return Chip(
-                          label: Text(spec),
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          if (mechanic.specializations.isNotEmpty)
-            const SizedBox(height: 16),
-
           // Status Card
           Card(
             child: Padding(
@@ -321,6 +280,80 @@ class MyShopScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // Services & Pricing Card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        PlatformUtils.isIOS ? CupertinoIcons.wrench_fill : Icons.build,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Services & Pricing',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (mechanic.businessPhone != null) ...[
+                    _buildInfoRow(
+                      context,
+                      PlatformUtils.isIOS ? CupertinoIcons.phone_fill : Icons.phone,
+                      mechanic.businessPhone!,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (mechanic.licenseNumber != null) ...[
+                    _buildInfoRow(
+                      context,
+                      PlatformUtils.isIOS ? CupertinoIcons.doc_text_fill : Icons.badge,
+                      'License: ${mechanic.licenseNumber}',
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (mechanic.hourlyRate != null) ...[
+                    _buildInfoRow(
+                      context,
+                      PlatformUtils.isIOS ? CupertinoIcons.money_dollar_circle_fill : Icons.attach_money,
+                      '${mechanic.hourlyRate} RON/hour',
+                    ),
+                  ],
+                  if (mechanic.specializations.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Specializations',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: mechanic.specializations.map((spec) {
+                        return Chip(
+                          label: Text(spec),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Description Card
           if (mechanic.description != null)
             Card(
@@ -380,6 +413,12 @@ class MyShopScreen extends StatelessWidget {
                 },
                 icon: const Icon(Icons.edit),
                 label: const Text('Edit Shop Info'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
         ],

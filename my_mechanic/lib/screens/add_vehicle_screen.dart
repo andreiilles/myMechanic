@@ -47,7 +47,6 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     }
 
     final vehicle = Vehicle(
-      ownerId: '', // Will be set in the provider
       make: _makeController.text.trim(),
       model: _modelController.text.trim(),
       year: int.parse(_yearController.text),
