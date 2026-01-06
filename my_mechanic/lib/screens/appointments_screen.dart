@@ -19,6 +19,7 @@ class AppointmentsScreen extends StatefulWidget {
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
   String _selectedFilter = 'all';
   bool _isLoading = true;
+  AppointmentProvider? _appointmentProvider;
 
   @override
   void initState() {
@@ -37,20 +38,38 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
+  int _getStatusPriority(AppointmentStatus status) {
+    switch (status) {
+      case AppointmentStatus.pending:
+      case AppointmentStatus.proposed:
+        return 1; // New appointments first
+      case AppointmentStatus.accepted:
+      case AppointmentStatus.confirmed:
+      case AppointmentStatus.inProgress:
+        return 2; // Active appointments second
+      case AppointmentStatus.cancelled:
+        return 3; // Cancelled third
+      case AppointmentStatus.completed:
+        return 4; // Completed last
+      case AppointmentStatus.declined:
+        return 3; // Same as cancelled
+    }
+  }
+
   Future<void> _loadAppointments() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
+    _appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
     
     if (userProvider.currentUser != null) {
       final isMechanic = userProvider.currentUser!.userType == UserType.mechanic;
-      await appointmentProvider.loadAppointments(
+      await _appointmentProvider!.loadAppointments(
         userProvider.currentUser!.id!,
         asMechanic: isMechanic,
       );
       
-      appointmentProvider.subscribeToAppointments(
+      _appointmentProvider!.subscribeToAppointments(
         userProvider.currentUser!.id!,
         asMechanic: isMechanic,
       );
@@ -61,26 +80,45 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
   @override
   void dispose() {
-    final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
-    appointmentProvider.unsubscribeFromAppointments();
+    _appointmentProvider?.unsubscribeFromAppointments();
     super.dispose();
   }
 
   List<Appointment> _getFilteredAppointments(List<Appointment> appointments) {
-    if (_selectedFilter == 'all') return appointments;
+    List<Appointment> filtered;
     
-    return appointments.where((appointment) {
-      switch (_selectedFilter) {
-        case 'pending':
-          return appointment.status == AppointmentStatus.pending;
-        case 'confirmed':
-          return appointment.status == AppointmentStatus.confirmed;
-        case 'completed':
-          return appointment.status == AppointmentStatus.completed;
-        default:
-          return true;
-      }
-    }).toList();
+    if (_selectedFilter == 'all') {
+      filtered = appointments;
+    } else {
+      filtered = appointments.where((appointment) {
+        switch (_selectedFilter) {
+          case 'pending':
+            return appointment.status == AppointmentStatus.pending;
+          case 'confirmed':
+            return appointment.status == AppointmentStatus.confirmed;
+          case 'completed':
+            return appointment.status == AppointmentStatus.completed;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+    
+    // Sort by priority for 'all' filter
+    if (_selectedFilter == 'all') {
+      filtered.sort((a, b) {
+        final priorityA = _getStatusPriority(a.status);
+        final priorityB = _getStatusPriority(b.status);
+        
+        if (priorityA != priorityB) {
+          return priorityA.compareTo(priorityB);
+        }
+        // If same priority, sort by date (newer first)
+        return b.appointmentDate.compareTo(a.appointmentDate);
+      });
+    }
+    
+    return filtered;
   }
 
   @override

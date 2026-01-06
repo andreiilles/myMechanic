@@ -29,23 +29,14 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   List<Map<String, dynamic>> _maintenanceRecords = [];
   bool _loadingRecords = false;
   Map<String, dynamic>? _mechanicShop;
+  Map<String, dynamic>? _vehicleData;
 
   @override
   void initState() {
     super.initState();
     
-    // Debug logging
-    debugPrint('=== Appointment Detail Debug ===');
-    debugPrint('isMechanic: ${widget.isMechanic}');
-    debugPrint('customer != null: ${widget.appointment.customer != null}');
-    debugPrint('customer data: ${widget.appointment.customer}');
-    debugPrint('vehicle != null: ${widget.appointment.vehicle != null}');
-    debugPrint('vehicle data: ${widget.appointment.vehicle}');
-    debugPrint('vehicleId: ${widget.appointment.vehicleId}');
-    debugPrint('Check condition: isMechanic=${widget.isMechanic}, vehicle null check=${widget.appointment.vehicle != null}');
-    debugPrint('Should show vehicle? ${widget.isMechanic && widget.appointment.vehicle != null}');
-    
     if (widget.isMechanic) {
+      _loadVehicleData();
       _loadMaintenanceRecords();
     } else {
       _loadMechanicShop();
@@ -56,6 +47,42 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   void dispose() {
     _responseController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadVehicleData() async {
+    debugPrint('=== Loading vehicle data ===');
+    debugPrint('vehicleId: ${widget.appointment.vehicleId}');
+    
+    // First check if we already have vehicle data
+    if (widget.appointment.vehicle != null) {
+      setState(() {
+        _vehicleData = widget.appointment.vehicle;
+      });
+      debugPrint('✅ Using existing vehicle data from appointment');
+      return;
+    }
+    
+    try {
+      // Query vehicles table directly now that RLS is fixed
+      final response = await SupabaseService.client
+          .from('vehicles')
+          .select('id, make, model, year, vin, license_plate, current_mileage, color')
+          .eq('id', widget.appointment.vehicleId)
+          .maybeSingle();
+
+      debugPrint('Vehicle query response: $response');
+      
+      if (mounted && response != null) {
+        setState(() {
+          _vehicleData = response;
+        });
+        debugPrint('✅ Vehicle data loaded successfully: $_vehicleData');
+      } else {
+        debugPrint('❌ Vehicle data is null');
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading vehicle data: $e');
+    }
   }
 
   Future<void> _loadMechanicShop() async {
@@ -215,18 +242,23 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
     final lat = shop['latitude'];
     final lng = shop['longitude'];
-    final address = Uri.encodeComponent(shop['business_address'] ?? '');
+    
+    // Build complete address with business name for better accuracy
+    final businessName = shop['business_name'] ?? '';
+    final address = shop['business_address'] ?? '';
+    final completeQuery = '$businessName, $address'.trim();
+    final encodedQuery = Uri.encodeComponent(completeQuery);
 
-    // Try Google Maps first
-    final googleUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    // Try Google Maps first with both query and coordinates for best accuracy
+    final googleUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedQuery&query_place_id=$lat,$lng');
     if (await canLaunchUrl(googleUrl)) {
       await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
       return;
     }
 
-    // Fallback to Apple Maps on iOS
+    // Fallback to Apple Maps on iOS with complete address
     if (PlatformUtils.isIOS) {
-      final appleUrl = Uri.parse('https://maps.apple.com/?q=$address&ll=$lat,$lng');
+      final appleUrl = Uri.parse('https://maps.apple.com/?q=$encodedQuery&ll=$lat,$lng');
       if (await canLaunchUrl(appleUrl)) {
         await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
         return;
@@ -628,7 +660,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
           ],
 
           // Vehicle Info (for mechanic)
-          if (widget.isMechanic && widget.appointment.vehicle != null) ...[
+          if (widget.isMechanic && _vehicleData != null) ...[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -651,13 +683,13 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Vehicle', '${widget.appointment.vehicle!['make']} ${widget.appointment.vehicle!['model']}'),
-                    _buildInfoRow('Year', widget.appointment.vehicle!['year'].toString()),
-                    _buildInfoRow('VIN', widget.appointment.vehicle!['vin']),
-                    _buildInfoRow('Mileage', '${widget.appointment.vehicle!['current_mileage']} km'),
-                    _buildInfoRow('License Plate', widget.appointment.vehicle!['license_plate'] ?? 'N/A'),
-                    if (widget.appointment.vehicle!['color'] != null)
-                      _buildInfoRow('Color', widget.appointment.vehicle!['color']),
+                    _buildInfoRow('Vehicle', '${_vehicleData!['make']} ${_vehicleData!['model']}'),
+                    _buildInfoRow('Year', _vehicleData!['year'].toString()),
+                    _buildInfoRow('VIN', _vehicleData!['vin']),
+                    _buildInfoRow('Mileage', '${_vehicleData!['current_mileage']} km'),
+                    _buildInfoRow('License Plate', _vehicleData!['license_plate'] ?? 'N/A'),
+                    if (_vehicleData!['color'] != null)
+                      _buildInfoRow('Color', _vehicleData!['color']),
                   ],
                 ),
               ),

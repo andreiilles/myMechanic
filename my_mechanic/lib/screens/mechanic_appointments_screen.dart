@@ -17,6 +17,7 @@ class MechanicAppointmentsScreen extends StatefulWidget {
 class _MechanicAppointmentsScreenState extends State<MechanicAppointmentsScreen> {
   AppointmentStatus? _selectedFilter;
   bool _isLoading = true;
+  AppointmentProvider? _appointmentProvider;
 
   @override
   void initState() {
@@ -34,18 +35,37 @@ class _MechanicAppointmentsScreenState extends State<MechanicAppointmentsScreen>
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
+  int _getStatusPriority(AppointmentStatus status) {
+    switch (status) {
+      case AppointmentStatus.pending:
+      case AppointmentStatus.proposed:
+        return 1; // New appointments first
+      case AppointmentStatus.accepted:
+      case AppointmentStatus.confirmed:
+      case AppointmentStatus.inProgress:
+        return 2; // Active appointments second
+      case AppointmentStatus.cancelled:
+        return 3; // Cancelled third
+      case AppointmentStatus.completed:
+        return 4; // Completed last
+      case AppointmentStatus.declined:
+        return 3; // Same as cancelled
+    }
+  }
+
   Future<void> _loadAppointments() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
     final userId = context.read<UserProvider>().currentUser?.id;
     debugPrint('MechanicAppointmentsScreen: userId = $userId');
     if (userId != null) {
-      await context.read<AppointmentProvider>().loadAppointments(userId, asMechanic: true);
+      _appointmentProvider = context.read<AppointmentProvider>();
+      await _appointmentProvider!.loadAppointments(userId, asMechanic: true);
       
       // Subscribe to real-time updates (mechanics don't get notifications)
-      context.read<AppointmentProvider>().subscribeToAppointments(userId, asMechanic: true);
+      _appointmentProvider!.subscribeToAppointments(userId, asMechanic: true);
       
-      final count = context.read<AppointmentProvider>().appointments.length;
+      final count = _appointmentProvider!.appointments.length;
       debugPrint('MechanicAppointmentsScreen: loaded $count appointments');
     } else {
       debugPrint('MechanicAppointmentsScreen: userId is null!');
@@ -57,15 +77,34 @@ class _MechanicAppointmentsScreenState extends State<MechanicAppointmentsScreen>
   @override
   void dispose() {
     // Unsubscribe when leaving screen
-    context.read<AppointmentProvider>().unsubscribeFromAppointments();
+    _appointmentProvider?.unsubscribeFromAppointments();
     super.dispose();
   }
 
   List<Appointment> _getFilteredAppointments(List<Appointment> appointments) {
+    List<Appointment> filtered;
+    
     if (_selectedFilter == null) {
-      return appointments;
+      filtered = appointments;
+    } else {
+      filtered = appointments.where((a) => a.status == _selectedFilter).toList();
     }
-    return appointments.where((a) => a.status == _selectedFilter).toList();
+    
+    // Sort by priority when showing all appointments
+    if (_selectedFilter == null) {
+      filtered.sort((a, b) {
+        final priorityA = _getStatusPriority(a.status);
+        final priorityB = _getStatusPriority(b.status);
+        
+        if (priorityA != priorityB) {
+          return priorityA.compareTo(priorityB);
+        }
+        // If same priority, sort by date (newer first)
+        return b.appointmentDate.compareTo(a.appointmentDate);
+      });
+    }
+    
+    return filtered;
   }
 
   @override

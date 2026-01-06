@@ -5,6 +5,7 @@ import 'package:geocoding/geocoding.dart';
 import '../models/mechanic.dart';
 import '../providers/user_provider.dart';
 import '../utils/platform_utils.dart';
+import 'address_picker_screen.dart';
 
 class EditShopScreen extends StatefulWidget {
   final Mechanic mechanic;
@@ -28,6 +29,8 @@ class _EditShopScreenState extends State<EditShopScreen> {
   
   bool _isLoading = false;
   bool _isGeocodingAddress = false;
+  double? _selectedLatitude;
+  double? _selectedLongitude;
 
   final List<String> _availableSpecializations = [
     'Engine Repair',
@@ -57,6 +60,8 @@ class _EditShopScreenState extends State<EditShopScreen> {
     );
     _isAcceptingClients = widget.mechanic.isAcceptingClients;
     _specializations = List.from(widget.mechanic.specializations);
+    _selectedLatitude = widget.mechanic.latitude;
+    _selectedLongitude = widget.mechanic.longitude;
   }
 
   @override
@@ -79,6 +84,10 @@ class _EditShopScreenState extends State<EditShopScreen> {
     try {
       List<Location> locations = await locationFromAddress(address);
       if (locations.isNotEmpty && mounted) {
+        setState(() {
+          _selectedLatitude = locations.first.latitude;
+          _selectedLongitude = locations.first.longitude;
+        });
         _showSnackBar('Location found! Coordinates will be saved.', isError: false);
       }
     } catch (e) {
@@ -92,6 +101,32 @@ class _EditShopScreenState extends State<EditShopScreen> {
     }
   }
 
+  Future<void> _openAddressPicker() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      PlatformUtils.isIOS
+          ? CupertinoPageRoute(
+              builder: (context) => AddressPickerScreen(
+                initialAddress: _businessAddressController.text,
+              ),
+            )
+          : MaterialPageRoute(
+              builder: (context) => AddressPickerScreen(
+                initialAddress: _businessAddressController.text,
+              ),
+            ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _businessAddressController.text = result['address'] ?? '';
+        _selectedLatitude = result['latitude'];
+        _selectedLongitude = result['longitude'];
+      });
+      _showSnackBar('Address selected successfully!', isError: false);
+    }
+  }
+
   Future<void> _saveShop() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -100,20 +135,23 @@ class _EditShopScreenState extends State<EditShopScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Geocode the address if it changed
-      double? latitude = widget.mechanic.latitude;
-      double? longitude = widget.mechanic.longitude;
+      // Use the coordinates from address picker or geocoding
+      double? latitude = _selectedLatitude;
+      double? longitude = _selectedLongitude;
       
-      if (_businessAddressController.text.trim() != widget.mechanic.businessAddress) {
-        try {
-          List<Location> locations = await locationFromAddress(_businessAddressController.text.trim());
-          if (locations.isNotEmpty) {
-            latitude = locations.first.latitude;
-            longitude = locations.first.longitude;
+      // If no coordinates yet, try to geocode the current address
+      if (latitude == null || longitude == null) {
+        if (_businessAddressController.text.trim().isNotEmpty) {
+          try {
+            List<Location> locations = await locationFromAddress(_businessAddressController.text.trim());
+            if (locations.isNotEmpty) {
+              latitude = locations.first.latitude;
+              longitude = locations.first.longitude;
+            }
+          } catch (e) {
+            debugPrint('Geocoding failed: $e');
+            // Continue without coordinates
           }
-        } catch (e) {
-          debugPrint('Geocoding failed: $e');
-          // Continue without coordinates
         }
       }
 
@@ -374,39 +412,53 @@ class _EditShopScreenState extends State<EditShopScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Business Address
-          _buildTextField(
-            controller: _businessAddressController,
-            label: 'Business Address',
-            icon: PlatformUtils.isIOS ? CupertinoIcons.location_solid : Icons.location_on,
-            maxLines: 2,
-            keyboardType: TextInputType.streetAddress,
-            suffix: _isGeocodingAddress
-                ? (PlatformUtils.isIOS 
-                    ? const CupertinoActivityIndicator() 
-                    : const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ))
-                : IconButton(
-                    icon: Icon(
-                      PlatformUtils.isIOS ? CupertinoIcons.search : Icons.search,
-                      size: 20,
-                    ),
-                    onPressed: _geocodeAddress,
-                    tooltip: 'Find location',
-                  ),
+          // Business Address - with button to open address picker
+          GestureDetector(
+            onTap: _openAddressPicker,
+            child: AbsorbPointer(
+              child: _buildTextField(
+                controller: _businessAddressController,
+                label: 'Business Address',
+                icon: PlatformUtils.isIOS ? CupertinoIcons.location_solid : Icons.location_on,
+                maxLines: 2,
+                keyboardType: TextInputType.streetAddress,
+                suffix: Icon(
+                  PlatformUtils.isIOS ? CupertinoIcons.chevron_right : Icons.chevron_right,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'We will automatically find the coordinates for map display',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-                fontStyle: FontStyle.italic,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedLatitude != null && _selectedLongitude != null
+                        ? 'Location verified ✓'
+                        : 'Tap to search and select address',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _selectedLatitude != null && _selectedLongitude != null
+                          ? Colors.green
+                          : Theme.of(context).colorScheme.primary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _openAddressPicker,
+                  child: Text(
+                    'Change',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
