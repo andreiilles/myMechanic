@@ -15,19 +15,13 @@ class MyShopScreen extends StatelessWidget {
 
     if (PlatformUtils.isIOS) {
       return CupertinoPageScaffold(
-        navigationBar: const CupertinoNavigationBar(
-          middle: Text('My Shop'),
-        ),
-        child: SafeArea(
-          child: _buildContent(context, mechanic),
-        ),
+        navigationBar: const CupertinoNavigationBar(middle: Text('My Shop')),
+        child: SafeArea(child: _buildContent(context, mechanic)),
       );
     }
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Shop'),
-      ),
+      appBar: AppBar(title: const Text('My Shop')),
       body: _buildContent(context, mechanic),
     );
   }
@@ -58,7 +52,9 @@ class MyShopScreen extends StatelessWidget {
                   ),
                 ),
                 child: Icon(
-                  PlatformUtils.isIOS ? CupertinoIcons.exclamationmark_triangle : Icons.error_outline,
+                  PlatformUtils.isIOS
+                      ? CupertinoIcons.exclamationmark_triangle
+                      : Icons.error_outline,
                   size: 64,
                   color: Colors.orange[400],
                 ),
@@ -96,20 +92,28 @@ class MyShopScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.1),
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.05),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.2),
                             width: 1,
                           ),
                         ),
                         child: Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.building_2_fill : Icons.business,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.building_2_fill
+                              : Icons.business,
                           size: 32,
                           color: Theme.of(context).colorScheme.primary,
                         ),
@@ -121,15 +125,16 @@ class MyShopScreen extends StatelessWidget {
                           children: [
                             Text(
                               mechanic.businessName,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             if (mechanic.isVerified)
                               Row(
                                 children: [
                                   Icon(
-                                    PlatformUtils.isIOS ? CupertinoIcons.checkmark_seal_fill : Icons.verified,
+                                    PlatformUtils.isIOS
+                                        ? CupertinoIcons.checkmark_seal_fill
+                                        : Icons.verified,
                                     size: 16,
                                     color: Colors.blue,
                                   ),
@@ -152,7 +157,9 @@ class MyShopScreen extends StatelessWidget {
                   if (mechanic.businessAddress != null) ...[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.location_solid : Icons.location_on,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.location_solid
+                          : Icons.location_on,
                       mechanic.businessAddress!,
                     ),
                     const SizedBox(height: 8),
@@ -160,7 +167,9 @@ class MyShopScreen extends StatelessWidget {
                   if (mechanic.businessPhone != null) ...[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.phone_fill : Icons.phone,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.phone_fill
+                          : Icons.phone,
                       mechanic.businessPhone!,
                     ),
                     const SizedBox(height: 8),
@@ -168,7 +177,9 @@ class MyShopScreen extends StatelessWidget {
                   if (mechanic.licenseNumber != null) ...[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.doc_text_fill : Icons.badge,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.doc_text_fill
+                          : Icons.badge,
                       'License: ${mechanic.licenseNumber}',
                     ),
                     const SizedBox(height: 8),
@@ -176,7 +187,9 @@ class MyShopScreen extends StatelessWidget {
                   if (mechanic.hourlyRate != null) ...[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.money_dollar_circle_fill : Icons.attach_money,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.money_dollar_circle_fill
+                          : Icons.attach_money,
                       '${mechanic.hourlyRate} RON/hour',
                     ),
                   ],
@@ -204,9 +217,15 @@ class MyShopScreen extends StatelessWidget {
                     children: [
                       Icon(
                         mechanic.isAcceptingClients
-                            ? (PlatformUtils.isIOS ? CupertinoIcons.check_mark_circled_solid : Icons.check_circle)
-                            : (PlatformUtils.isIOS ? CupertinoIcons.pause_circle_fill : Icons.pause_circle),
-                        color: mechanic.isAcceptingClients ? Colors.green : Colors.orange,
+                            ? (PlatformUtils.isIOS
+                                  ? CupertinoIcons.check_mark_circled_solid
+                                  : Icons.check_circle)
+                            : (PlatformUtils.isIOS
+                                  ? CupertinoIcons.pause_circle_fill
+                                  : Icons.pause_circle),
+                        color: mechanic.isAcceptingClients
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -214,10 +233,13 @@ class MyShopScreen extends StatelessWidget {
                           mechanic.isAcceptingClients
                               ? 'Accepting New Clients'
                               : 'Not Accepting New Clients',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: mechanic.isAcceptingClients ? Colors.green : Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: mechanic.isAcceptingClients
+                                    ? Colors.green
+                                    : Colors.orange,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ),
                     ],
@@ -227,9 +249,9 @@ class MyShopScreen extends StatelessWidget {
                     mechanic.isAcceptingClients
                         ? 'Your shop is visible to customers and available for bookings.'
                         : 'Your shop is hidden from new booking requests.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -254,16 +276,17 @@ class MyShopScreen extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        PlatformUtils.isIOS ? CupertinoIcons.star_fill : Icons.star,
+                        PlatformUtils.isIOS
+                            ? CupertinoIcons.star_fill
+                            : Icons.star,
                         color: Colors.amber,
                         size: 32,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         (mechanic.averageRating ?? 0.0).toStringAsFixed(1),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -286,47 +309,54 @@ class MyShopScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Row(
                     children: [
                       Icon(
-                        PlatformUtils.isIOS ? CupertinoIcons.wrench_fill : Icons.build,
+                        PlatformUtils.isIOS
+                            ? CupertinoIcons.wrench_fill
+                            : Icons.build,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Services & Pricing',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  if (mechanic.businessPhone != null) ...[
+                  if (mechanic.businessPhone != null) ...<Widget>[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.phone_fill : Icons.phone,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.phone_fill
+                          : Icons.phone,
                       mechanic.businessPhone!,
                     ),
                     const SizedBox(height: 8),
                   ],
-                  if (mechanic.licenseNumber != null) ...[
+                  if (mechanic.licenseNumber != null) ...<Widget>[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.doc_text_fill : Icons.badge,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.doc_text_fill
+                          : Icons.badge,
                       'License: ${mechanic.licenseNumber}',
                     ),
                     const SizedBox(height: 8),
                   ],
-                  if (mechanic.hourlyRate != null) ...[
+                  if (mechanic.hourlyRate != null) ...<Widget>[
                     _buildInfoRow(
                       context,
-                      PlatformUtils.isIOS ? CupertinoIcons.money_dollar_circle_fill : Icons.attach_money,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.money_dollar_circle_fill
+                          : Icons.attach_money,
                       '${mechanic.hourlyRate} RON/hour',
                     ),
                   ],
-                  if (mechanic.specializations.isNotEmpty) ...[
+                  if (mechanic.specializations.isNotEmpty) ...<Widget>[
                     const SizedBox(height: 12),
                     const Divider(),
                     const SizedBox(height: 8),
@@ -340,10 +370,12 @@ class MyShopScreen extends StatelessWidget {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: mechanic.specializations.map((spec) {
+                      children: mechanic.specializations.map<Widget>((spec) {
                         return Chip(
                           label: Text(spec),
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
                         );
                       }).toList(),
                     ),
@@ -432,10 +464,7 @@ class MyShopScreen extends StatelessWidget {
         Icon(icon, size: 20, color: Colors.grey[600]),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ),
       ],
     );

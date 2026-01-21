@@ -27,12 +27,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _serviceTypeController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _estimatedCostController = TextEditingController();
-  
+
   Vehicle? _selectedVehicle;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
-  int _durationMinutes = 60;
   bool _isLoading = false;
 
   final List<String> _commonServices = [
@@ -47,15 +45,15 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     'Other',
   ];
 
-  final List<int> _durations = [30, 60, 90, 120, 180, 240];
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = context.read<UserProvider>();
       if (userProvider.currentUser?.id != null) {
-        context.read<VehicleProvider>().loadVehicles(userProvider.currentUser!.id!);
+        context.read<VehicleProvider>().loadVehicles(
+          userProvider.currentUser!.id!,
+        );
       }
     });
   }
@@ -64,11 +62,65 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   void dispose() {
     _serviceTypeController.dispose();
     _descriptionController.dispose();
-    _estimatedCostController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate() async {
+    if (PlatformUtils.isIOS) {
+      DateTime tempDate = _selectedDate;
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (BuildContext context) => Container(
+          height: 250,
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          child: Column(
+            children: [
+              Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBackground.resolveFrom(context),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: CupertinoColors.systemGrey4.resolveFrom(context),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('Cancel'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('Done'),
+                      onPressed: () {
+                        setState(() => _selectedDate = tempDate);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: _selectedDate,
+                  minimumDate: DateTime.now(),
+                  maximumDate: DateTime.now().add(const Duration(days: 365)),
+                  onDateTimeChanged: (DateTime newDate) {
+                    tempDate = newDate;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -81,6 +133,71 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   }
 
   Future<void> _selectTime() async {
+    if (PlatformUtils.isIOS) {
+      DateTime tempDateTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
+
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (BuildContext context) => Container(
+          height: 250,
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          child: Column(
+            children: [
+              Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBackground.resolveFrom(context),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: CupertinoColors.systemGrey4.resolveFrom(context),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      child: const Text('Cancel'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoButton(
+                      child: const Text('Done'),
+                      onPressed: () {
+                        setState(() {
+                          _selectedTime = TimeOfDay(
+                            hour: tempDateTime.hour,
+                            minute: tempDateTime.minute,
+                          );
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  initialDateTime: tempDateTime,
+                  onDateTimeChanged: (DateTime newDateTime) {
+                    tempDateTime = newDateTime;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+
     final picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
@@ -119,17 +236,16 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       mechanicId: widget.mechanicId,
       vehicleId: _selectedVehicle!.id!,
       appointmentDate: appointmentDate,
-      durationMinutes: _durationMinutes,
       serviceType: _serviceTypeController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty 
-          ? null 
-          : _descriptionController.text.trim(),
-      estimatedCost: _estimatedCostController.text.trim().isEmpty
+      description: _descriptionController.text.trim().isEmpty
           ? null
-          : double.tryParse(_estimatedCostController.text.trim()),
+          : _descriptionController.text.trim(),
     );
 
-    final appointmentProvider = Provider.of<AppointmentProvider>(context, listen: false);
+    final appointmentProvider = Provider.of<AppointmentProvider>(
+      context,
+      listen: false,
+    );
     final success = await appointmentProvider.createAppointment(appointment);
 
     setState(() => _isLoading = false);
@@ -180,10 +296,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }
@@ -202,11 +315,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   child: const Text('Book'),
                 ),
         ),
-        child: SafeArea(
-          child: Material(
-            child: _buildForm(),
-          ),
-        ),
+        child: SafeArea(child: Material(child: _buildForm())),
       );
     }
 
@@ -226,10 +335,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               ),
             )
           else
-            TextButton(
-              onPressed: _bookAppointment,
-              child: const Text('Book'),
-            ),
+            TextButton(onPressed: _bookAppointment, child: const Text('Book')),
         ],
       ),
       body: _buildForm(),
@@ -245,9 +351,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           if (widget.mechanicName != null) ...[
             Card(
               child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.person),
-                ),
+                leading: const CircleAvatar(child: Icon(Icons.person)),
                 title: Text(widget.mechanicName!),
                 subtitle: const Text('Mechanic'),
               ),
@@ -256,11 +360,23 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           ],
           _buildSectionTitle('Vehicle'),
           const SizedBox(height: 8),
-          _buildVehicleSelector(),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: _buildVehicleSelector(),
+            ),
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Service Type'),
           const SizedBox(height: 8),
-          _buildServiceTypeField(),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: _buildServiceTypeField(),
+            ),
+          ),
           const SizedBox(height: 24),
           _buildSectionTitle('Date & Time'),
           const SizedBox(height: 8),
@@ -272,17 +388,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('Duration'),
-          const SizedBox(height: 8),
-          _buildDurationSelector(),
-          const SizedBox(height: 24),
           _buildSectionTitle('Description (Optional)'),
           const SizedBox(height: 8),
           _buildDescriptionField(),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Estimated Cost (Optional)'),
-          const SizedBox(height: 8),
-          _buildCostField(),
           const SizedBox(height: 32),
         ],
       ),
@@ -292,10 +400,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     );
   }
 
@@ -314,11 +419,41 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           );
         }
 
+        if (PlatformUtils.isIOS) {
+          return GestureDetector(
+            onTap: () => _showIOSVehiclePicker(vehicleProvider.vehicles),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: CupertinoColors.systemGrey4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _selectedVehicle == null
+                        ? 'Select a vehicle'
+                        : '${_selectedVehicle!.year} ${_selectedVehicle!.make} ${_selectedVehicle!.model}',
+                    style: TextStyle(
+                      color: _selectedVehicle == null
+                          ? CupertinoColors.systemGrey
+                          : CupertinoColors.label,
+                    ),
+                  ),
+                  const Icon(CupertinoIcons.chevron_down, size: 20),
+                ],
+              ),
+            ),
+          );
+        }
+
         return DropdownButtonFormField<Vehicle>(
           value: _selectedVehicle,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Select a vehicle',
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           ),
           items: vehicleProvider.vehicles.map((vehicle) {
             return DropdownMenuItem(
@@ -338,18 +473,113 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
   }
 
+  void _showIOSVehiclePicker(List<Vehicle> vehicles) {
+    int selectedIndex = _selectedVehicle != null
+        ? vehicles.indexOf(_selectedVehicle!)
+        : 0;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 250,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: Column(
+          children: [
+            Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemBackground.resolveFrom(context),
+                border: Border(
+                  bottom: BorderSide(
+                    color: CupertinoColors.systemGrey4.resolveFrom(context),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  CupertinoButton(
+                    child: const Text('Done'),
+                    onPressed: () {
+                      setState(
+                        () => _selectedVehicle = vehicles[selectedIndex],
+                      );
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoPicker(
+                itemExtent: 40,
+                scrollController: FixedExtentScrollController(
+                  initialItem: selectedIndex,
+                ),
+                onSelectedItemChanged: (index) {
+                  selectedIndex = index;
+                },
+                children: vehicles.map((vehicle) {
+                  return Center(
+                    child: Text(
+                      '${vehicle.year} ${vehicle.make} ${vehicle.model}',
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildServiceTypeField() {
+    if (PlatformUtils.isIOS) {
+      return GestureDetector(
+        onTap: _showIOSServiceTypePicker,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: CupertinoColors.systemGrey4),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _serviceTypeController.text.isEmpty
+                    ? 'Select service type'
+                    : _serviceTypeController.text,
+                style: TextStyle(
+                  color: _serviceTypeController.text.isEmpty
+                      ? CupertinoColors.systemGrey
+                      : CupertinoColors.label,
+                ),
+              ),
+              const Icon(CupertinoIcons.chevron_down, size: 20),
+            ],
+          ),
+        ),
+      );
+    }
+
     return DropdownButtonFormField<String>(
-      value: _serviceTypeController.text.isEmpty ? null : _serviceTypeController.text,
+      value: _serviceTypeController.text.isEmpty
+          ? null
+          : _serviceTypeController.text,
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
         hintText: 'Select service type',
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       ),
       items: _commonServices.map((service) {
-        return DropdownMenuItem(
-          value: service,
-          child: Text(service),
-        );
+        return DropdownMenuItem(value: service, child: Text(service));
       }).toList(),
       onChanged: (value) {
         if (value != null) {
@@ -365,9 +595,93 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
   }
 
+  void _showIOSServiceTypePicker() {
+    int selectedIndex = _serviceTypeController.text.isEmpty
+        ? 0
+        : _commonServices.indexOf(_serviceTypeController.text);
+    if (selectedIndex == -1) selectedIndex = 0;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 250,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: Column(
+          children: [
+            Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemBackground.resolveFrom(context),
+                border: Border(
+                  bottom: BorderSide(
+                    color: CupertinoColors.systemGrey4.resolveFrom(context),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  CupertinoButton(
+                    child: const Text('Done'),
+                    onPressed: () {
+                      setState(
+                        () => _serviceTypeController.text =
+                            _commonServices[selectedIndex],
+                      );
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoPicker(
+                itemExtent: 40,
+                scrollController: FixedExtentScrollController(
+                  initialItem: selectedIndex,
+                ),
+                onSelectedItemChanged: (index) {
+                  selectedIndex = index;
+                },
+                children: _commonServices.map((service) {
+                  return Center(child: Text(service));
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDateSelector() {
     final dateFormat = DateFormat('MMM dd, yyyy');
-    
+
+    if (PlatformUtils.isIOS) {
+      return GestureDetector(
+        onTap: _selectDate,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: CupertinoColors.systemGrey4),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const Icon(CupertinoIcons.calendar, size: 20),
+              const SizedBox(width: 8),
+              Text(dateFormat.format(_selectedDate)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return InkWell(
       onTap: _selectDate,
       child: InputDecorator(
@@ -381,6 +695,26 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   }
 
   Widget _buildTimeSelector() {
+    if (PlatformUtils.isIOS) {
+      return GestureDetector(
+        onTap: _selectTime,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: CupertinoColors.systemGrey4),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const Icon(CupertinoIcons.time, size: 20),
+              const SizedBox(width: 8),
+              Text(_selectedTime.format(context)),
+            ],
+          ),
+        ),
+      );
+    }
+
     return InkWell(
       onTap: _selectTime,
       child: InputDecorator(
@@ -393,27 +727,6 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
   }
 
-  Widget _buildDurationSelector() {
-    return DropdownButtonFormField<int>(
-      value: _durationMinutes,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        suffixText: 'minutes',
-      ),
-      items: _durations.map((duration) {
-        return DropdownMenuItem(
-          value: duration,
-          child: Text('$duration minutes (${(duration / 60).toStringAsFixed(1)} hours)'),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          setState(() => _durationMinutes = value);
-        }
-      },
-    );
-  }
-
   Widget _buildDescriptionField() {
     return TextFormField(
       controller: _descriptionController,
@@ -422,18 +735,6 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         hintText: 'Describe the issue or service needed',
       ),
       maxLines: 4,
-    );
-  }
-
-  Widget _buildCostField() {
-    return TextFormField(
-      controller: _estimatedCostController,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        prefixText: '\$ ',
-        hintText: '0.00',
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
   }
 }

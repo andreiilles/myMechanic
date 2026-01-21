@@ -16,23 +16,21 @@ import '../screens/add_maintenance_screen.dart';
 class VehicleDetailScreen extends StatefulWidget {
   final Vehicle vehicle;
 
-  const VehicleDetailScreen({
-    super.key,
-    required this.vehicle,
-  });
+  const VehicleDetailScreen({super.key, required this.vehicle});
 
   @override
   State<VehicleDetailScreen> createState() => _VehicleDetailScreenState();
 }
 
-class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTickerProviderStateMixin {
+class _VehicleDetailScreenState extends State<VehicleDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Load maintenance records
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final maintenanceProvider = context.read<MaintenanceProvider>();
@@ -58,9 +56,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             child: const Icon(CupertinoIcons.ellipsis),
           ),
         ),
-        child: SafeArea(
-          child: _buildBody(),
-        ),
+        child: SafeArea(child: _buildBody()),
       );
     }
 
@@ -68,14 +64,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
       appBar: AppBar(
         title: Text('${widget.vehicle.make} ${widget.vehicle.model}'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _editVehicle,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _deleteVehicle,
-          ),
+          IconButton(icon: const Icon(Icons.edit), onPressed: _editVehicle),
+          IconButton(icon: const Icon(Icons.delete), onPressed: _deleteVehicle),
         ],
       ),
       body: _buildBody(),
@@ -134,20 +124,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                     ),
                   ),
                   child: ClipOval(
-                    child: widget.vehicle.imageUrl != null && widget.vehicle.imageUrl!.isNotEmpty
+                    child:
+                        widget.vehicle.imageUrl != null &&
+                            widget.vehicle.imageUrl!.isNotEmpty
                         ? Image.network(
                             widget.vehicle.imageUrl!,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(
-                                PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car,
+                                PlatformUtils.isIOS
+                                    ? CupertinoIcons.car_detailed
+                                    : Icons.directions_car,
                                 size: 60,
                                 color: Colors.white,
                               );
                             },
                           )
                         : Icon(
-                            PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car,
+                            PlatformUtils.isIOS
+                                ? CupertinoIcons.car_detailed
+                                : Icons.directions_car,
                             size: 60,
                             color: Colors.white,
                           ),
@@ -168,7 +164,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: Icon(
-                      PlatformUtils.isIOS ? CupertinoIcons.camera_fill : Icons.camera_alt,
+                      PlatformUtils.isIOS
+                          ? CupertinoIcons.camera_fill
+                          : Icons.camera_alt,
                       size: 16,
                       color: Colors.white,
                     ),
@@ -177,7 +175,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               ),
               // Show "Shared" badge if vehicle is shared
               FutureBuilder<bool>(
-                future: context.read<VehicleProvider>().isVehicleShared(widget.vehicle.id!),
+                future: context.read<VehicleProvider>().isVehicleShared(
+                  widget.vehicle.id!,
+                ),
                 builder: (context, snapshot) {
                   if (snapshot.data == true) {
                     return Positioned(
@@ -191,7 +191,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                           border: Border.all(color: Colors.white, width: 2),
                         ),
                         child: Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.person_2_fill : Icons.people,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.person_2_fill
+                              : Icons.people,
                           size: 16,
                           color: Colors.white,
                         ),
@@ -211,7 +213,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
-              decoration: TextDecoration.none, // Explicitly remove any underline
+              decoration:
+                  TextDecoration.none, // Explicitly remove any underline
             ),
           ),
           const SizedBox(height: 4),
@@ -221,28 +224,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             style: const TextStyle(
               fontSize: 18,
               color: Colors.white70,
-              decoration: TextDecoration.none, // Explicitly remove any underline
+              decoration:
+                  TextDecoration.none, // Explicitly remove any underline
             ),
           ),
-          if (widget.vehicle.licensePlate != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                widget.vehicle.licensePlate!,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                  letterSpacing: 2,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -251,7 +236,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
   Widget _buildTabBar() {
     debugPrint('Building TabBar - Platform.isIOS: ${Platform.isIOS}');
     debugPrint('Building TabBar - PlatformUtils.isIOS: ${PlatformUtils.isIOS}');
-    
+
     if (Platform.isIOS) {
       debugPrint('Using CupertinoSlidingSegmentedControl for iOS');
       // Use AnimatedBuilder to rebuild whenever the tab controller animation changes
@@ -260,7 +245,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
         builder: (context, child) {
           // Get the current index, accounting for animation progress
           final int currentIndex = _tabController.animation!.value.round();
-          
+
           return Container(
             decoration: BoxDecoration(
               color: CupertinoColors.systemBackground.resolveFrom(context),
@@ -277,34 +262,55 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               },
               children: {
                 0: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     'Overview',
                     style: TextStyle(
-                      color: currentIndex == 0 ? CupertinoColors.white : CupertinoColors.black,
-                      fontWeight: currentIndex == 0 ? FontWeight.w600 : FontWeight.normal,
+                      color: currentIndex == 0
+                          ? CupertinoColors.white
+                          : CupertinoColors.black,
+                      fontWeight: currentIndex == 0
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                       decoration: TextDecoration.none,
                     ),
                   ),
                 ),
                 1: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     'Maintenance',
                     style: TextStyle(
-                      color: currentIndex == 1 ? CupertinoColors.white : CupertinoColors.black,
-                      fontWeight: currentIndex == 1 ? FontWeight.w600 : FontWeight.normal,
+                      color: currentIndex == 1
+                          ? CupertinoColors.white
+                          : CupertinoColors.black,
+                      fontWeight: currentIndex == 1
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                       decoration: TextDecoration.none,
                     ),
                   ),
                 ),
                 2: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     'Documents',
                     style: TextStyle(
-                      color: currentIndex == 2 ? CupertinoColors.white : CupertinoColors.black,
-                      fontWeight: currentIndex == 2 ? FontWeight.w600 : FontWeight.normal,
+                      color: currentIndex == 2
+                          ? CupertinoColors.white
+                          : CupertinoColors.black,
+                      fontWeight: currentIndex == 2
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                       decoration: TextDecoration.none,
                     ),
                   ),
@@ -324,14 +330,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
         controller: _tabController,
         labelColor: Theme.of(context).primaryColor,
         unselectedLabelColor: Colors.grey,
-        indicator: const BoxDecoration(
-          color: Colors.transparent,
-        ),
+        indicator: const BoxDecoration(color: Colors.transparent),
         dividerColor: Colors.transparent,
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         unselectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 14,
@@ -374,10 +375,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                 'Last Inspection',
                 _formatDate(widget.vehicle.lastTechnicalInspection!),
               ),
-            _buildInfoRow(
-              'Added',
-              _formatDate(widget.vehicle.createdAt),
-            ),
+            _buildInfoRow('Added', _formatDate(widget.vehicle.createdAt)),
             _buildInfoRow(
               'Last Updated',
               _formatDate(widget.vehicle.updatedAt),
@@ -388,10 +386,15 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
           const SizedBox(height: 12),
           Consumer<MaintenanceProvider>(
             builder: (context, maintenanceProvider, child) {
-              final records = maintenanceProvider.getRecordsForVehicle(widget.vehicle.id!);
-              final totalCost = maintenanceProvider.getTotalCostForVehicle(widget.vehicle.id!);
-              final upcomingCount = maintenanceProvider.getUpcomingMaintenanceCount(widget.vehicle.id!);
-              
+              final records = maintenanceProvider.getRecordsForVehicle(
+                widget.vehicle.id!,
+              );
+              final totalCost = maintenanceProvider.getTotalCostForVehicle(
+                widget.vehicle.id!,
+              );
+              final upcomingCount = maintenanceProvider
+                  .getUpcomingMaintenanceCount(widget.vehicle.id!);
+
               return Row(
                 children: [
                   Expanded(
@@ -429,7 +432,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
           _buildSectionTitle('Shared With'),
           const SizedBox(height: 12),
           FutureBuilder<List<Map<String, dynamic>>>(
-            future: context.read<VehicleProvider>().getVehicleUsers(widget.vehicle.id!),
+            future: context.read<VehicleProvider>().getVehicleUsers(
+              widget.vehicle.id!,
+            ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -440,7 +445,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               }
 
               final users = snapshot.data!;
-              
+
               if (users.length <= 1) {
                 // Only owner, no sharing
                 return Card(
@@ -449,7 +454,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                     child: Row(
                       children: [
                         Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.person : Icons.person,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.person
+                              : Icons.person,
                           color: Colors.grey[600],
                         ),
                         const SizedBox(width: 12),
@@ -481,7 +488,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                       padding: const EdgeInsets.all(8),
                       child: TextButton.icon(
                         onPressed: _showShareVehicleDialog,
-                        icon: Icon(PlatformUtils.isIOS ? CupertinoIcons.person_add : Icons.person_add),
+                        icon: Icon(
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.person_add
+                              : Icons.person_add,
+                        ),
                         label: const Text('Add User'),
                       ),
                     ),
@@ -502,14 +513,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
   Widget _buildUserCard(Map<String, dynamic> userData) {
     final relationship = userData['relationship'] as String?;
     final userInfo = userData['users'] as Map<String, dynamic>?;
-    
+
     if (userInfo == null) return const SizedBox.shrink();
-    
+
     final firstName = userInfo['first_name'] as String? ?? '';
     final lastName = userInfo['last_name'] as String? ?? '';
     final email = userInfo['email'] as String? ?? '';
     final fullName = '$firstName $lastName'.trim();
-    
+
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
@@ -566,12 +577,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
   Widget _buildMaintenanceTab() {
     return Consumer<MaintenanceProvider>(
       builder: (context, maintenanceProvider, child) {
-        final records = maintenanceProvider.getRecordsForVehicle(widget.vehicle.id!);
+        final records = maintenanceProvider.getRecordsForVehicle(
+          widget.vehicle.id!,
+        );
 
         if (maintenanceProvider.isLoading) {
-          return Center(
-            child: AdaptiveLoadingIndicator(size: 20),
-          );
+          return Center(child: AdaptiveLoadingIndicator(size: 20));
         }
 
         if (records.isEmpty) {
@@ -589,16 +600,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                   const SizedBox(height: 16),
                   Text(
                     'No maintenance records',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Add your first maintenance record',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -701,7 +712,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             Row(
               children: [
                 Icon(
-                  PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.calendar_today,
+                  PlatformUtils.isIOS
+                      ? CupertinoIcons.calendar
+                      : Icons.calendar_today,
                   size: 16,
                   color: Colors.grey[600],
                 ),
@@ -712,7 +725,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                 ),
                 const SizedBox(width: 16),
                 Icon(
-                  PlatformUtils.isIOS ? CupertinoIcons.speedometer : Icons.speed,
+                  PlatformUtils.isIOS
+                      ? CupertinoIcons.speedometer
+                      : Icons.speed,
                   size: 16,
                   color: Colors.grey[600],
                 ),
@@ -725,27 +740,23 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             ),
             if (record.description != null) ...[
               const SizedBox(height: 8),
-              Text(
-                record.description!,
-                style: const TextStyle(fontSize: 14),
-              ),
+              Text(record.description!, style: const TextStyle(fontSize: 14)),
             ],
             if (record.serviceProvider != null) ...[
               const SizedBox(height: 8),
               Row(
                 children: [
                   Icon(
-                    PlatformUtils.isIOS ? CupertinoIcons.building_2_fill : Icons.business,
+                    PlatformUtils.isIOS
+                        ? CupertinoIcons.building_2_fill
+                        : Icons.business,
                     size: 16,
                     color: Colors.grey[600],
                   ),
                   const SizedBox(width: 4),
                   Text(
                     record.serviceProvider!,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                 ],
               ),
@@ -771,16 +782,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             const SizedBox(height: 16),
             Text(
               'No documents',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Store insurance, registration, and other documents',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -792,9 +803,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -803,9 +814,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: children,
-        ),
+        child: Column(children: children),
       ),
     );
   }
@@ -820,20 +829,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             width: 120,
             child: Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 15,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 15),
             ),
           ),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -866,10 +869,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -916,16 +916,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
 
   void _navigateToAddMaintenance() async {
     try {
-      debugPrint('Navigating to Add Maintenance screen for vehicle: ${widget.vehicle.id}');
-      
+      debugPrint(
+        'Navigating to Add Maintenance screen for vehicle: ${widget.vehicle.id}',
+      );
+
       final result = await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => AddMaintenanceScreen(vehicle: widget.vehicle),
         ),
       );
-      
+
       debugPrint('Returned from Add Maintenance screen with result: $result');
-      
+
       // Reload maintenance records if a record was added
       if (result == true && mounted) {
         final maintenanceProvider = context.read<MaintenanceProvider>();
@@ -934,7 +936,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
     } catch (e, stackTrace) {
       debugPrint('Error navigating to Add Maintenance: $e');
       debugPrint('Stack trace: $stackTrace');
-      
+
       if (mounted) {
         _showMessage('Error: ${e.toString()}', isError: true);
       }
@@ -945,7 +947,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
     showAdaptiveAlertDialog(
       context: context,
       title: 'Delete Vehicle',
-      content: 'Are you sure you want to delete this vehicle? This action cannot be undone.',
+      content:
+          'Are you sure you want to delete this vehicle? This action cannot be undone.',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       isDestructive: true,
@@ -953,11 +956,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
       if (confirmed == true) {
         final vehicleProvider = context.read<VehicleProvider>();
         final success = await vehicleProvider.deleteVehicle(widget.vehicle.id!);
-        
+
         if (mounted) {
           if (success) {
             Navigator.of(context).pop(); // Go back to home screen
-            
+
             // Show success message
             if (PlatformUtils.isIOS) {
               // For iOS, we can't show SnackBar since we're using CupertinoPageScaffold
@@ -1029,7 +1032,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
               },
               child: const Text('Choose from Gallery'),
             ),
-            if (widget.vehicle.imageUrl != null && widget.vehicle.imageUrl!.isNotEmpty)
+            if (widget.vehicle.imageUrl != null &&
+                widget.vehicle.imageUrl!.isNotEmpty)
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
@@ -1070,10 +1074,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
                     _pickImage(ImageSource.gallery);
                   },
                 ),
-                if (widget.vehicle.imageUrl != null && widget.vehicle.imageUrl!.isNotEmpty)
+                if (widget.vehicle.imageUrl != null &&
+                    widget.vehicle.imageUrl!.isNotEmpty)
                   ListTile(
                     leading: const Icon(Icons.delete, color: Colors.red),
-                    title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                    title: const Text(
+                      'Remove Photo',
+                      style: TextStyle(color: Colors.red),
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                       _removeImage();
@@ -1154,10 +1162,13 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
       if (success) {
         // Refresh the screen to show new image
         setState(() {});
-        
+
         _showMessage('Vehicle photo updated successfully', isError: false);
       } else {
-        _showMessage(vehicleProvider.error ?? 'Failed to upload image', isError: true);
+        _showMessage(
+          vehicleProvider.error ?? 'Failed to upload image',
+          isError: true,
+        );
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
@@ -1168,7 +1179,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
         } catch (_) {
           // Dialog might not be open
         }
-        
+
         _showMessage('Error: ${e.toString()}', isError: true);
       }
     }
@@ -1190,16 +1201,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> with SingleTi
 
     try {
       final vehicleProvider = context.read<VehicleProvider>();
-      final success = await vehicleProvider.removeVehicleImage(widget.vehicle.id!);
+      final success = await vehicleProvider.removeVehicleImage(
+        widget.vehicle.id!,
+      );
 
       if (!mounted) return;
 
       if (success) {
         setState(() {});
-        
+
         _showMessage('Vehicle photo removed', isError: false);
       } else {
-        _showMessage(vehicleProvider.error ?? 'Failed to remove image', isError: true);
+        _showMessage(
+          vehicleProvider.error ?? 'Failed to remove image',
+          isError: true,
+        );
       }
     } catch (e) {
       debugPrint('Error removing image: $e');

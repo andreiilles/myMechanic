@@ -17,9 +17,7 @@ class DashboardScreen extends StatelessWidget {
 
     if (PlatformUtils.isIOS) {
       return CupertinoPageScaffold(
-        navigationBar: const CupertinoNavigationBar(
-          middle: Text('Home'),
-        ),
+        navigationBar: const CupertinoNavigationBar(middle: Text('Home')),
         child: Material(
           color: CupertinoColors.systemGroupedBackground,
           child: SafeArea(
@@ -28,11 +26,9 @@ class DashboardScreen extends StatelessWidget {
         ),
       );
     }
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+      appBar: AppBar(title: const Text('Home')),
       body: _buildContent(context, user?.firstName ?? 'there'),
     );
   }
@@ -60,8 +56,12 @@ class DashboardScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.1),
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.05),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -69,8 +69,8 @@ class DashboardScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          PlatformUtils.isIOS 
-                              ? CupertinoIcons.hand_raised_fill 
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.hand_raised_fill
                               : Icons.waving_hand,
                           size: 32,
                           color: Theme.of(context).colorScheme.primary,
@@ -83,15 +83,13 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             Text(
                               'Welcome back,',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[600]),
                             ),
                             Text(
                               firstName,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -103,9 +101,9 @@ class DashboardScreen extends StatelessWidget {
                     isMechanic
                         ? 'Manage your shop and appointments from here.'
                         : 'Keep track of your vehicles and find nearby mechanics.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -116,13 +114,16 @@ class DashboardScreen extends StatelessWidget {
           // Quick Actions Section
           Text(
             'Quick Actions',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
-          if (isMechanic) ..._buildMechanicActions(context) else ..._buildCustomerActions(context),
+          if (isMechanic)
+            ..._buildMechanicActions(context)
+          else
+            ..._buildCustomerActions(context),
         ],
       ),
     );
@@ -134,16 +135,20 @@ class DashboardScreen extends StatelessWidget {
         context: context,
         title: 'My Vehicles',
         subtitle: 'View and manage your vehicles',
-        icon: PlatformUtils.isIOS ? CupertinoIcons.car_detailed : Icons.directions_car,
+        icon: PlatformUtils.isIOS
+            ? CupertinoIcons.car_detailed
+            : Icons.directions_car,
         color: Colors.blue,
-        onTap: () => onNavigateToTab?.call(2),
+        onTap: () => onNavigateToTab?.call(3),
       ),
       const SizedBox(height: 12),
       _buildActionCard(
         context: context,
         title: 'Find Shops',
         subtitle: 'Discover nearby mechanic shops',
-        icon: PlatformUtils.isIOS ? CupertinoIcons.map_pin_ellipse : Icons.location_on,
+        icon: PlatformUtils.isIOS
+            ? CupertinoIcons.map_pin_ellipse
+            : Icons.location_on,
         color: Colors.green,
         onTap: () => onNavigateToTab?.call(1),
       ),
@@ -152,9 +157,11 @@ class DashboardScreen extends StatelessWidget {
         context: context,
         title: 'Profile',
         subtitle: 'View and edit your profile',
-        icon: PlatformUtils.isIOS ? CupertinoIcons.person_circle : Icons.account_circle,
+        icon: PlatformUtils.isIOS
+            ? CupertinoIcons.person_circle
+            : Icons.account_circle,
         color: Colors.orange,
-        onTap: () => onNavigateToTab?.call(3),
+        onTap: () => onNavigateToTab?.call(4),
       ),
     ];
   }
@@ -165,7 +172,9 @@ class DashboardScreen extends StatelessWidget {
         context: context,
         title: 'My Shop',
         subtitle: 'Manage your shop details',
-        icon: PlatformUtils.isIOS ? CupertinoIcons.building_2_fill : Icons.business,
+        icon: PlatformUtils.isIOS
+            ? CupertinoIcons.building_2_fill
+            : Icons.business,
         color: Colors.blue,
         onTap: () => onNavigateToTab?.call(1),
       ),
@@ -174,7 +183,9 @@ class DashboardScreen extends StatelessWidget {
         context: context,
         title: 'Appointments',
         subtitle: 'View and manage bookings',
-        icon: PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.calendar_today,
+        icon: PlatformUtils.isIOS
+            ? CupertinoIcons.calendar
+            : Icons.calendar_today,
         color: Colors.green,
         onTap: () => onNavigateToTab?.call(2),
       ),
@@ -183,7 +194,9 @@ class DashboardScreen extends StatelessWidget {
         context: context,
         title: 'Profile',
         subtitle: 'View and edit your profile',
-        icon: PlatformUtils.isIOS ? CupertinoIcons.person_circle : Icons.account_circle,
+        icon: PlatformUtils.isIOS
+            ? CupertinoIcons.person_circle
+            : Icons.account_circle,
         color: Colors.orange,
         onTap: () => onNavigateToTab?.call(3),
       ),
@@ -199,53 +212,54 @@ class DashboardScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            debugPrint('Quick action tapped: $title');
+            onTap();
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 28),
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Icon(
-                PlatformUtils.isIOS 
-                    ? CupertinoIcons.chevron_right 
-                    : Icons.chevron_right,
-                color: Colors.grey[400],
-              ),
-            ],
+                Icon(
+                  PlatformUtils.isIOS
+                      ? CupertinoIcons.chevron_right
+                      : Icons.chevron_right,
+                  color: Colors.grey[400],
+                ),
+              ],
+            ),
           ),
         ),
       ),
