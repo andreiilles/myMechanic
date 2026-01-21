@@ -1,0 +1,34 @@
+title Mechanic Dashboard & Shop View
+
+actor Mechanic
+participant "Flutter App" as App
+participant "Supabase Backend" as Supabase
+
+note over Mechanic, Supabase: User lands on Dashboard
+Mechanic->App: Open Dashboard
+activate App
+App->Supabase: Fetch Dashboard Stats
+activate Supabase
+Supabase-->App: Return Summary Data
+deactivate Supabase
+App-->Mechanic: Show Dashboard
+deactivate App
+
+note over Mechanic, Supabase: User views Shop Details
+Mechanic->App: Click "My Shop"
+activate App
+App->Supabase: Fetch Shop Details \n(Name, Status, Ratings, Services)
+activate Supabase
+Supabase-->App: Return Shop Profile
+deactivate Supabase
+App-->Mechanic: Display Shop Profile & Edit Button
+deactivate App
+
+note over Mechanic, Supabase: User edits details
+Mechanic->App: Click "Edit Shop"
+Mechanic->App: Update Status to "Closed"
+App->Supabase: Update Shop Record
+activate Supabase
+Supabase-->App: Success
+deactivate Supabase
+App-->Mechanic: Show Updated Status

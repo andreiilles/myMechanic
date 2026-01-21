@@ -1,0 +1,25 @@
+title Mechanic Personal Profile Update
+
+actor Mechanic
+participant "Flutter App" as App
+participant "Supabase Backend" as Supabase
+
+note over Mechanic, Supabase: User views Personal Profile
+Mechanic->App: Click "Account Settings"
+activate App
+App->Supabase: Fetch User Metadata (Name, Email, Phone)
+activate Supabase
+Supabase-->App: Return User Data
+deactivate Supabase
+App-->Mechanic: Display Profile Form
+
+note over Mechanic, Supabase: User updates phone number
+Mechanic->App: Click "Edit Telephone"
+Mechanic->App: Input New Number
+Mechanic->App: Click "Save"
+App->Supabase: Update User Table (auth.users)
+activate Supabase
+Supabase-->App: Success
+deactivate Supabase
+App-->Mechanic: Show "Profile Updated" Message
+deactivate App

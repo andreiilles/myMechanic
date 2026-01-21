@@ -1,0 +1,23 @@
+title Mechanic Sign Up Process
+
+actor Mechanic
+participant "Flutter App" as App
+participant "Supabase Backend" as Supabase
+
+note over Mechanic, Supabase: Step 1: Mandatory Credentials
+Mechanic->App: Enter Email, Password, Phone, Shop Name
+activate App
+App->Supabase: Sign Up (Auth & User Metadata)
+activate Supabase
+Supabase-->App: Success (User Created)
+deactivate Supabase
+App-->Mechanic: Proceed to Profile Setup
+
+note over Mechanic, Supabase: Step 2: Profile Extensions
+Mechanic->App: Enter Address, License, Rate (Optional)
+App->Supabase: Update Profile Table
+activate Supabase
+Supabase-->App: Success
+deactivate Supabase
+App-->Mechanic: Redirect to Dashboard
+deactivate App

@@ -1,0 +1,24 @@
+title Edit Shop Details Flow
+
+actor Mechanic
+participant "Flutter App" as App
+participant "Supabase Backend" as Supabase
+
+note over Mechanic, Supabase: User is viewing Shop Profile
+Mechanic->App: Click "Edit Profile"
+activate App
+App-->Mechanic: Enable Input Fields
+
+note over Mechanic, Supabase: User performs specific updates
+Mechanic->App: Change Hourly Rate ($50 -> $60)
+Mechanic->App: Update Availability (9am - 5pm)
+Mechanic->App: Click "Save Changes"
+
+App->Supabase: UPDATE shop_table SET rate=60, hours=...
+activate Supabase
+Supabase-->App: Success (200 OK)
+deactivate Supabase
+
+App-->Mechanic: Show "Profile Updated" Toast
+App-->Mechanic: Return to View Mode
+deactivate App

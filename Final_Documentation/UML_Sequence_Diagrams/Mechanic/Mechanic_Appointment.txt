@@ -1,0 +1,23 @@
+title Mechanic Appointment View
+
+actor Mechanic
+participant "Flutter App" as App
+participant "Supabase Backend" as Supabase
+
+note over Mechanic, Supabase: User accesses Job Queue
+Mechanic->App: Click "My Appointments"
+activate App
+App->Supabase: Fetch Appointments (Default: All)
+activate Supabase
+Supabase-->App: Return List
+deactivate Supabase
+App-->Mechanic: Display List (Mixed Status)
+
+note over Mechanic, Supabase: User filters for New Requests
+Mechanic->App: Click "Pending" Tab
+App->Supabase: Fetch Appointments WHERE status='pending'
+activate Supabase
+Supabase-->App: Return Pending List
+deactivate Supabase
+App-->Mechanic: Update UI to show only Pending requests
+deactivate App
