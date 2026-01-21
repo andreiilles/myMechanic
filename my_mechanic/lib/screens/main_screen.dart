@@ -21,6 +21,28 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  CupertinoTabController? _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = CupertinoTabController(initialIndex: 0);
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
+  }
+
+  void _navigateToTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    if (PlatformUtils.isIOS && _tabController != null) {
+      _tabController!.index = index;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +51,7 @@ class _MainScreenState extends State<MainScreen> {
 
     // Different screens for mechanics vs customers
     final List<Widget> customerScreens = [
-      DashboardScreen(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
+      DashboardScreen(onNavigateToTab: _navigateToTab),
       const FindShopsScreen(),
       const AppointmentsScreen(),
       const VehiclesScreen(),
@@ -37,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     final List<Widget> mechanicScreens = [
-      DashboardScreen(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
+      DashboardScreen(onNavigateToTab: _navigateToTab),
       const MyShopScreen(),
       const MechanicAppointmentsScreen(),
       const ProfileScreen(),
@@ -47,19 +69,18 @@ class _MainScreenState extends State<MainScreen> {
 
     if (PlatformUtils.isIOS) {
       return CupertinoTabScaffold(
+        controller: _tabController,
         tabBar: CupertinoTabBar(
           currentIndex: _currentIndex,
           onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
+            _navigateToTab(index);
           },
-          items: isMechanic ? _getMechanicIOSTabItems() : _getCustomerIOSTabItems(),
+          items: isMechanic
+              ? _getMechanicIOSTabItems()
+              : _getCustomerIOSTabItems(),
         ),
         tabBuilder: (context, index) {
-          return CupertinoTabView(
-            builder: (context) => screens[index],
-          );
+          return CupertinoTabView(builder: (context) => screens[index]);
         },
       );
     }
@@ -68,12 +89,10 @@ class _MainScreenState extends State<MainScreen> {
       body: screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: isMechanic ? _getMechanicAndroidDestinations() : _getCustomerAndroidDestinations(),
+        onDestinationSelected: _navigateToTab,
+        destinations: isMechanic
+            ? _getMechanicAndroidDestinations()
+            : _getCustomerAndroidDestinations(),
       ),
     );
   }

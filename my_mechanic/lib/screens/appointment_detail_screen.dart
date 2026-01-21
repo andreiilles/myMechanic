@@ -18,7 +18,8 @@ class AppointmentDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<AppointmentDetailScreen> createState() => _AppointmentDetailScreenState();
+  State<AppointmentDetailScreen> createState() =>
+      _AppointmentDetailScreenState();
 }
 
 class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
@@ -34,7 +35,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.isMechanic) {
       _loadVehicleData();
       _loadMaintenanceRecords();
@@ -52,7 +53,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   Future<void> _loadVehicleData() async {
     debugPrint('=== Loading vehicle data ===');
     debugPrint('vehicleId: ${widget.appointment.vehicleId}');
-    
+
     // First check if we already have vehicle data
     if (widget.appointment.vehicle != null) {
       setState(() {
@@ -61,17 +62,19 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
       debugPrint('✅ Using existing vehicle data from appointment');
       return;
     }
-    
+
     try {
       // Query vehicles table directly now that RLS is fixed
       final response = await SupabaseService.client
           .from('vehicles')
-          .select('id, make, model, year, vin, license_plate, current_mileage, color')
+          .select(
+            'id, make, model, year, vin, license_plate, current_mileage, color',
+          )
           .eq('id', widget.appointment.vehicleId)
           .maybeSingle();
 
       debugPrint('Vehicle query response: $response');
-      
+
       if (mounted && response != null) {
         setState(() {
           _vehicleData = response;
@@ -131,7 +134,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
   Future<void> _cancelAppointment() async {
     final TextEditingController reasonController = TextEditingController();
-    
+
     final shouldCancel = await (PlatformUtils.isIOS
         ? showCupertinoDialog<bool>(
             context: context,
@@ -140,7 +143,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
               content: Column(
                 children: [
                   const SizedBox(height: 8),
-                  const Text('Are you sure you want to cancel this appointment?'),
+                  const Text(
+                    'Are you sure you want to cancel this appointment?',
+                  ),
                   const SizedBox(height: 16),
                   CupertinoTextField(
                     controller: reasonController,
@@ -169,7 +174,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Are you sure you want to cancel this appointment?'),
+                  const Text(
+                    'Are you sure you want to cancel this appointment?',
+                  ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: reasonController,
@@ -198,11 +205,15 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
     if (shouldCancel == true && mounted) {
       setState(() => _isLoading = true);
 
-      final success = await context.read<AppointmentProvider>().cancelAppointment(
-        widget.appointment.id!,
-        reason: reasonController.text.isNotEmpty ? reasonController.text : null,
-        isMechanic: widget.isMechanic,
-      );
+      final success = await context
+          .read<AppointmentProvider>()
+          .cancelAppointment(
+            widget.appointment.id!,
+            reason: reasonController.text.isNotEmpty
+                ? reasonController.text
+                : null,
+            isMechanic: widget.isMechanic,
+          );
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -218,18 +229,39 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   String _formatDateTime(DateTime date) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    final time = '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final time =
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     return '${date.day} ${months[date.month - 1]} ${date.year} at $time';
   }
 
@@ -242,30 +274,129 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
     final lat = shop['latitude'];
     final lng = shop['longitude'];
-    
-    // Build complete address with business name for better accuracy
     final businessName = shop['business_name'] ?? '';
     final address = shop['business_address'] ?? '';
     final completeQuery = '$businessName, $address'.trim();
     final encodedQuery = Uri.encodeComponent(completeQuery);
 
-    // Try Google Maps first with both query and coordinates for best accuracy
-    final googleUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedQuery&query_place_id=$lat,$lng');
-    if (await canLaunchUrl(googleUrl)) {
-      await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
-      return;
-    }
+    // Check which apps are available
+    final availableApps = <Map<String, dynamic>>[];
 
-    // Fallback to Apple Maps on iOS with complete address
+    // Apple Maps (iOS only)
     if (PlatformUtils.isIOS) {
-      final appleUrl = Uri.parse('https://maps.apple.com/?q=$encodedQuery&ll=$lat,$lng');
+      final appleUrl = Uri.parse(
+        'https://maps.apple.com/?q=$encodedQuery&ll=$lat,$lng',
+      );
       if (await canLaunchUrl(appleUrl)) {
-        await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
-        return;
+        availableApps.add({
+          'name': 'Apple Maps',
+          'icon': CupertinoIcons.map_fill,
+          'url': appleUrl,
+        });
       }
     }
 
-    _showErrorDialog('Could not open maps');
+    // Google Maps
+    final googleUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$encodedQuery&query_place_id=$lat,$lng',
+    );
+    if (await canLaunchUrl(googleUrl)) {
+      availableApps.add({
+        'name': 'Google Maps',
+        'icon': Icons.map,
+        'url': googleUrl,
+      });
+    }
+
+    // Waze
+    final wazeUrl = Uri.parse('https://waze.com/ul?ll=$lat,$lng&navigate=yes');
+    if (await canLaunchUrl(wazeUrl)) {
+      availableApps.add({
+        'name': 'Waze',
+        'icon': Icons.navigation,
+        'url': wazeUrl,
+      });
+    }
+
+    if (availableApps.isEmpty) {
+      _showErrorDialog('No navigation apps available');
+      return;
+    }
+
+    // Show picker
+    if (PlatformUtils.isIOS) {
+      await _showIOSMapPicker(availableApps);
+    } else {
+      await _showAndroidMapPicker(availableApps);
+    }
+  }
+
+  Future<void> _showIOSMapPicker(List<Map<String, dynamic>> apps) async {
+    await showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text('Open in'),
+        actions: apps.map((app) {
+          return CupertinoActionSheetAction(
+            onPressed: () async {
+              Navigator.pop(context);
+              await launchUrl(app['url'], mode: LaunchMode.externalApplication);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(app['icon'] as IconData, size: 20),
+                const SizedBox(width: 8),
+                Text(app['name'] as String),
+              ],
+            ),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAndroidMapPicker(List<Map<String, dynamic>> apps) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Open in',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ...apps.map((app) {
+                return ListTile(
+                  leading: Icon(app['icon'] as IconData),
+                  title: Text(app['name'] as String),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await launchUrl(
+                      app['url'],
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _selectProposedDate() async {
@@ -281,7 +412,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                 height: 200,
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.dateAndTime,
-                  initialDateTime: _proposedDate ?? DateTime.now().add(const Duration(days: 1)),
+                  initialDateTime:
+                      _proposedDate ??
+                      DateTime.now().add(const Duration(days: 1)),
                   minimumDate: DateTime.now(),
                   onDateTimeChanged: (date) {
                     setState(() {
@@ -302,7 +435,8 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
     } else {
       final picked = await showDatePicker(
         context: context,
-        initialDate: _proposedDate ?? DateTime.now().add(const Duration(days: 1)),
+        initialDate:
+            _proposedDate ?? DateTime.now().add(const Duration(days: 1)),
         firstDate: DateTime.now(),
         lastDate: DateTime.now().add(const Duration(days: 90)),
       );
@@ -356,10 +490,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await context.read<AppointmentProvider>().declineAppointment(
-      widget.appointment.id!,
-      reason: reason,
-    );
+    final success = await context
+        .read<AppointmentProvider>()
+        .declineAppointment(widget.appointment.id!, reason: reason);
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -382,13 +515,15 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final success = await context.read<AppointmentProvider>().proposeAlternativeDate(
-      widget.appointment.id!,
-      _proposedDate!,
-      message: _responseController.text.trim().isNotEmpty
-          ? _responseController.text.trim()
-          : null,
-    );
+    final success = await context
+        .read<AppointmentProvider>()
+        .proposeAlternativeDate(
+          widget.appointment.id!,
+          _proposedDate!,
+          message: _responseController.text.trim().isNotEmpty
+              ? _responseController.text.trim()
+              : null,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -404,7 +539,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
   Future<String?> _showDeclineReasonDialog() async {
     final controller = TextEditingController();
-    
+
     if (PlatformUtils.isIOS) {
       return await showCupertinoDialog<String>(
         context: context,
@@ -537,16 +672,12 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
         navigationBar: const CupertinoNavigationBar(
           middle: Text('Appointment Details'),
         ),
-        child: SafeArea(
-          child: _buildContent(),
-        ),
+        child: SafeArea(child: _buildContent()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Appointment Details'),
-      ),
+      appBar: AppBar(title: const Text('Appointment Details')),
       body: _buildContent(),
     );
   }
@@ -562,7 +693,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _getStatusColor(widget.appointment.status).withOpacity(0.1),
+                color: _getStatusColor(
+                  widget.appointment.status,
+                ).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
@@ -581,9 +714,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
           // Service Type
           Text(
             widget.appointment.serviceType,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
 
@@ -597,15 +730,16 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                   Row(
                     children: [
                       Icon(
-                        PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.calendar_today,
+                        PlatformUtils.isIOS
+                            ? CupertinoIcons.calendar
+                            : Icons.calendar_today,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Requested Date & Time',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -636,22 +770,33 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     Row(
                       children: [
                         Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.person_fill : Icons.person,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.person_fill
+                              : Icons.person,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Customer Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Name', '${widget.appointment.customer!['first_name']} ${widget.appointment.customer!['last_name']}'),
-                    _buildInfoRow('Phone', widget.appointment.customer!['phone_number'] ?? 'Not provided'),
-                    _buildInfoRow('Email', widget.appointment.customer!['email']),
+                    _buildInfoRow(
+                      'Name',
+                      '${widget.appointment.customer!['first_name']} ${widget.appointment.customer!['last_name']}',
+                    ),
+                    _buildInfoRow(
+                      'Phone',
+                      widget.appointment.customer!['phone_number'] ??
+                          'Not provided',
+                    ),
+                    _buildInfoRow(
+                      'Email',
+                      widget.appointment.customer!['email'],
+                    ),
                   ],
                 ),
               ),
@@ -670,24 +815,34 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     Row(
                       children: [
                         Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.car_fill : Icons.directions_car,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.car_fill
+                              : Icons.directions_car,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Vehicle Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Vehicle', '${_vehicleData!['make']} ${_vehicleData!['model']}'),
+                    _buildInfoRow(
+                      'Vehicle',
+                      '${_vehicleData!['make']} ${_vehicleData!['model']}',
+                    ),
                     _buildInfoRow('Year', _vehicleData!['year'].toString()),
                     _buildInfoRow('VIN', _vehicleData!['vin']),
-                    _buildInfoRow('Mileage', '${_vehicleData!['current_mileage']} km'),
-                    _buildInfoRow('License Plate', _vehicleData!['license_plate'] ?? 'N/A'),
+                    _buildInfoRow(
+                      'Mileage',
+                      '${_vehicleData!['current_mileage']} km',
+                    ),
+                    _buildInfoRow(
+                      'License Plate',
+                      _vehicleData!['license_plate'] ?? 'N/A',
+                    ),
                     if (_vehicleData!['color'] != null)
                       _buildInfoRow('Color', _vehicleData!['color']),
                   ],
@@ -708,24 +863,37 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     Row(
                       children: [
                         Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.car_fill : Icons.directions_car,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.car_fill
+                              : Icons.directions_car,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Vehicle Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildInfoRow('Vehicle', '${widget.appointment.vehicle!['make']} ${widget.appointment.vehicle!['model']}'),
-                    _buildInfoRow('Year', widget.appointment.vehicle!['year'].toString()),
-                    _buildInfoRow('License Plate', widget.appointment.vehicle!['license_plate'] ?? 'N/A'),
+                    _buildInfoRow(
+                      'Vehicle',
+                      '${widget.appointment.vehicle!['make']} ${widget.appointment.vehicle!['model']}',
+                    ),
+                    _buildInfoRow(
+                      'Year',
+                      widget.appointment.vehicle!['year'].toString(),
+                    ),
+                    _buildInfoRow(
+                      'License Plate',
+                      widget.appointment.vehicle!['license_plate'] ?? 'N/A',
+                    ),
                     if (widget.appointment.vehicle!['color'] != null)
-                      _buildInfoRow('Color', widget.appointment.vehicle!['color']),
+                      _buildInfoRow(
+                        'Color',
+                        widget.appointment.vehicle!['color'],
+                      ),
                   ],
                 ),
               ),
@@ -744,15 +912,16 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     Row(
                       children: [
                         Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.building_2_fill : Icons.business,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.building_2_fill
+                              : Icons.business,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Shop Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -761,11 +930,17 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     if (_mechanicShop!['business_phone'] != null)
                       _buildInfoRow('Phone', _mechanicShop!['business_phone']),
                     if (_mechanicShop!['business_address'] != null)
-                      _buildInfoRow('Address', _mechanicShop!['business_address']),
+                      _buildInfoRow(
+                        'Address',
+                        _mechanicShop!['business_address'],
+                      ),
                     if (_mechanicShop!['hourly_rate'] != null)
-                      _buildInfoRow('Hourly Rate', '\$${_mechanicShop!['hourly_rate']}/hr'),
+                      _buildInfoRow(
+                        'Hourly Rate',
+                        '\$${_mechanicShop!['hourly_rate']}/hr',
+                      ),
                     const SizedBox(height: 12),
-                    if (_mechanicShop!['latitude'] != null && 
+                    if (_mechanicShop!['latitude'] != null &&
                         _mechanicShop!['longitude'] != null)
                       SizedBox(
                         width: double.infinity,
@@ -796,16 +971,17 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     Row(
                       children: [
                         Icon(
-                          PlatformUtils.isIOS ? CupertinoIcons.wrench_fill : Icons.build,
+                          PlatformUtils.isIOS
+                              ? CupertinoIcons.wrench_fill
+                              : Icons.build,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Maintenance History',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
                         if (_loadingRecords)
@@ -820,7 +996,10 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     if (_maintenanceRecords.isEmpty && !_loadingRecords)
                       Text(
                         'No maintenance history available',
-                        style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     if (_maintenanceRecords.isNotEmpty)
                       ..._maintenanceRecords.take(5).map((record) {
@@ -830,7 +1009,11 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.check_circle_outline, size: 16, color: Colors.green),
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 16,
+                                color: Colors.green,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -838,16 +1021,24 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                                   children: [
                                     Text(
                                       record['type'] ?? 'Service',
-                                      style: const TextStyle(fontWeight: FontWeight.w500),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                     Text(
                                       '${date.day}/${date.month}/${date.year} • ${record['mileage_at_service']} km',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
                                     ),
                                     if (record['description'] != null)
                                       Text(
                                         record['description'],
-                                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[700],
+                                        ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -866,7 +1057,8 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
           ],
 
           // Description (full width, hide if empty)
-          if (widget.appointment.description != null && widget.appointment.description!.isNotEmpty) ...[
+          if (widget.appointment.description != null &&
+              widget.appointment.description!.isNotEmpty) ...[
             SizedBox(
               width: double.infinity,
               child: Card(
@@ -877,9 +1069,8 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     children: [
                       Text(
                         'Description',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       SizedBox(
@@ -898,12 +1089,13 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
           ],
 
           // Mechanic Actions (only for pending appointments)
-          if (widget.isMechanic && widget.appointment.status == AppointmentStatus.pending) ...[
+          if (widget.isMechanic &&
+              widget.appointment.status == AppointmentStatus.pending) ...[
             Text(
               'Response',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Card(
@@ -930,7 +1122,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.event,
+                        PlatformUtils.isIOS
+                            ? CupertinoIcons.calendar
+                            : Icons.event,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 12),
@@ -951,7 +1145,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                         ),
                       ),
                       Icon(
-                        PlatformUtils.isIOS ? CupertinoIcons.chevron_right : Icons.chevron_right,
+                        PlatformUtils.isIOS
+                            ? CupertinoIcons.chevron_right
+                            : Icons.chevron_right,
                         color: Colors.grey,
                       ),
                     ],
@@ -1019,10 +1215,11 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'Mechanic Response',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
                         ),
                       ],
                     ),
@@ -1068,27 +1265,37 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'Proposed Alternative Date',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[700],
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange[700],
+                              ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _formatDateTime(widget.appointment.proposedDate!),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    if (!widget.isMechanic && widget.appointment.status == AppointmentStatus.proposed) ...[
+                    if (!widget.isMechanic &&
+                        widget.appointment.status ==
+                            AppointmentStatus.proposed) ...[
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
-                            final success = await context.read<AppointmentProvider>().confirmProposedDate(widget.appointment.id!);
+                            final success = await context
+                                .read<AppointmentProvider>()
+                                .confirmProposedDate(widget.appointment.id!);
                             if (success && mounted) {
-                              _showSuccessDialog('Date confirmed successfully!');
+                              _showSuccessDialog(
+                                'Date confirmed successfully!',
+                              );
                             }
                           },
                           child: const Text('Confirm This Date'),
