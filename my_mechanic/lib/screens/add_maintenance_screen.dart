@@ -9,10 +9,7 @@ import '../utils/platform_utils.dart';
 class AddMaintenanceScreen extends StatefulWidget {
   final Vehicle vehicle;
 
-  const AddMaintenanceScreen({
-    super.key,
-    required this.vehicle,
-  });
+  const AddMaintenanceScreen({super.key, required this.vehicle});
 
   @override
   State<AddMaintenanceScreen> createState() => _AddMaintenanceScreenState();
@@ -33,7 +30,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('AddMaintenanceScreen initialized for vehicle: ${widget.vehicle.id}');
+    debugPrint(
+      'AddMaintenanceScreen initialized for vehicle: ${widget.vehicle.id}',
+    );
     // Pre-fill mileage with current vehicle mileage
     _mileageController.text = widget.vehicle.currentMileage.toString();
   }
@@ -59,12 +58,7 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
               leading: CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: _isSaving ? null : () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    fontSize: 17,
-                  ),
-                ),
+                child: const Text('Cancel', style: TextStyle(fontSize: 17)),
               ),
               actions: [
                 if (_isSaving)
@@ -142,13 +136,13 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Service Type
             Text(
               'Service Type',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildServiceTypeDropdown(),
@@ -163,7 +157,10 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: const TextStyle(fontSize: 16),
               maxLines: 2,
@@ -180,10 +177,15 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: const TextStyle(fontSize: 16),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter the cost';
@@ -206,7 +208,10 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: const TextStyle(fontSize: 16),
               keyboardType: TextInputType.number,
@@ -225,9 +230,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
             // Service Date
             Text(
               'Service Date',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildDatePicker(),
@@ -242,7 +247,10 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: const TextStyle(fontSize: 16),
             ),
@@ -257,25 +265,57 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 filled: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: const TextStyle(fontSize: 16),
               maxLines: 4,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
 
             // Save Button (Material only, iOS has it in nav bar)
             if (!PlatformUtils.isIOS)
-              ElevatedButton(
-                onPressed: _isSaving ? null : _saveMaintenance,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Save Maintenance Record'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isSaving
+                            ? null
+                            : () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: Colors.grey[400]!),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _saveMaintenance,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -311,17 +351,15 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
       value: _selectedType,
       style: const TextStyle(fontSize: 16, color: Colors.black87),
       decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         filled: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
       items: MaintenanceType.values.map((type) {
-        return DropdownMenuItem(
-          value: type,
-          child: Text(type.displayName),
-        );
+        return DropdownMenuItem(value: type, child: Text(type.displayName));
       }).toList(),
       onChanged: (value) {
         if (value != null) {
@@ -379,7 +417,8 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
   }
 
   Widget _buildDatePicker() {
-    final formattedDate = '${_serviceDate.day.toString().padLeft(2, '0')}/${_serviceDate.month.toString().padLeft(2, '0')}/${_serviceDate.year}';
+    final formattedDate =
+        '${_serviceDate.day.toString().padLeft(2, '0')}/${_serviceDate.month.toString().padLeft(2, '0')}/${_serviceDate.year}';
 
     return GestureDetector(
       onTap: _selectDate,
@@ -387,24 +426,23 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: PlatformUtils.isIOS 
-                ? CupertinoColors.systemGrey4 
+            color: PlatformUtils.isIOS
+                ? CupertinoColors.systemGrey4
                 : Colors.grey.shade400,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: PlatformUtils.isIOS 
+          color: PlatformUtils.isIOS
               ? CupertinoColors.systemBackground.resolveFrom(context)
               : Colors.grey.shade50,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              formattedDate,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(formattedDate, style: const TextStyle(fontSize: 16)),
             Icon(
-              PlatformUtils.isIOS ? CupertinoIcons.calendar : Icons.calendar_today,
+              PlatformUtils.isIOS
+                  ? CupertinoIcons.calendar
+                  : Icons.calendar_today,
               size: 18,
               color: Colors.grey.shade600,
             ),
@@ -483,17 +521,17 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
       final record = MaintenanceRecord(
         vehicleId: widget.vehicle.id!,
         type: _selectedType,
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         cost: double.parse(_costController.text),
         mileageAtService: int.parse(_mileageController.text),
         serviceDate: _serviceDate,
-        serviceProvider: _serviceProviderController.text.trim().isEmpty 
-            ? null 
+        serviceProvider: _serviceProviderController.text.trim().isEmpty
+            ? null
             : _serviceProviderController.text.trim(),
-        notes: _notesController.text.trim().isEmpty 
-            ? null 
+        notes: _notesController.text.trim().isEmpty
+            ? null
             : _notesController.text.trim(),
       );
 
@@ -514,7 +552,9 @@ class _AddMaintenanceScreenState extends State<AddMaintenanceScreen> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(maintenanceProvider.error ?? 'Failed to add maintenance record'),
+              content: Text(
+                maintenanceProvider.error ?? 'Failed to add maintenance record',
+              ),
               backgroundColor: Colors.red,
             ),
           );

@@ -10,6 +10,7 @@ import '../providers/maintenance_provider.dart';
 import '../utils/platform_utils.dart';
 import '../widgets/adaptive_widgets.dart';
 import '../widgets/share_vehicle_dialog.dart';
+import '../widgets/vehicle_detail/vehicle_documents_tab.dart';
 import '../screens/add_maintenance_screen.dart';
 // Make sure the path above is correct and that AddMaintenanceScreen is defined and exported in that file.
 
@@ -768,36 +769,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen>
   }
 
   Widget _buildDocumentsTab() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              PlatformUtils.isIOS ? CupertinoIcons.doc : Icons.description,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No documents',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Store insurance, registration, and other documents',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
+    return VehicleDocumentsTab(vehicle: widget.vehicle);
   }
 
   Widget _buildSectionTitle(String title) {

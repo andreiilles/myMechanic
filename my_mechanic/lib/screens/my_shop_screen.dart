@@ -371,11 +371,38 @@ class MyShopScreen extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: mechanic.specializations.map<Widget>((spec) {
-                        return Chip(
-                          label: Text(spec),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer,
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: PlatformUtils.isIOS
+                                ? CupertinoColors.systemBlue.withOpacity(0.1)
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            border: PlatformUtils.isIOS
+                                ? Border.all(
+                                    color: CupertinoColors.systemBlue
+                                        .withOpacity(0.3),
+                                    width: 1,
+                                  )
+                                : null,
+                          ),
+                          child: Text(
+                            spec,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: PlatformUtils.isIOS
+                                  ? CupertinoColors.systemBlue
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         );
                       }).toList(),
                     ),
