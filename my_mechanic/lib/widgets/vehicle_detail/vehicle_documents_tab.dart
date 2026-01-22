@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/vehicle.dart';
 import '../../models/vehicle_document.dart';
@@ -380,7 +381,128 @@ class _VehicleDocumentsTabState extends State<VehicleDocumentsTab> {
   }
 
   Future<void> _openDocument(VehicleDocument document) async {
-    // TODO: Implement document viewer or download
-    _showError('Document viewing coming soon. URL: ${document.fileUrl}');
+    try {
+      // For images, show in-app viewer
+      if (_isImageFile(document.documentType)) {
+        await _showImageViewer(document);
+        return;
+      }
+
+      // For other files (PDF, DOC, etc.), open in browser/external app
+      final uri = Uri.parse(document.fileUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showError('Could not open document');
+      }
+    } catch (e) {
+      _showError('Failed to open document: $e');
+    }
+  }
+
+  bool _isImageFile(String fileType) {
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileType.toLowerCase());
+  }
+
+  Future<void> _showImageViewer(VehicleDocument document) async {
+    if (PlatformUtils.isIOS) {
+      await showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                document.documentName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Image.network(
+                document.fileUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const CupertinoActivityIndicator();
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return const Column(
+                    children: [
+                      Icon(CupertinoIcons.exclamationmark_triangle, size: 48),
+                      SizedBox(height: 8),
+                      Text('Failed to load image'),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('Close'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    } else {
+      await showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        document.documentName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    document.fileUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: Colors.red),
+                            SizedBox(height: 8),
+                            Text('Failed to load image'),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      );
+    }
   }
 }

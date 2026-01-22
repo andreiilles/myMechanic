@@ -130,7 +130,20 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen>
                             widget.vehicle.imageUrl!.isNotEmpty
                         ? Image.network(
                             widget.vehicle.imageUrl!,
+                            key: ValueKey(widget.vehicle.imageUrl),
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: PlatformUtils.isIOS
+                                    ? const CupertinoActivityIndicator()
+                                    : const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                              );
+                            },
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(
                                 PlatformUtils.isIOS
@@ -1087,27 +1100,27 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen>
         barrierDismissible: false,
         builder: (dialogContext) => PopScope(
           canPop: false,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor,
-                    ),
+          child: PlatformUtils.isIOS
+              ? CupertinoAlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      CupertinoActivityIndicator(),
+                      SizedBox(height: 16),
+                      Text('Uploading image...'),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  const Text('Uploading image...'),
-                ],
-              ),
-            ),
-          ),
+                )
+              : AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Uploading image...'),
+                    ],
+                  ),
+                ),
         ),
       );
 
@@ -1132,8 +1145,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen>
 
       // Show success/error message
       if (success) {
-        // Refresh the screen to show new image
-        setState(() {});
+        // Refresh the vehicle to show new image
+        await vehicleProvider.getVehicleById(widget.vehicle.id!);
+        if (mounted) {
+          setState(() {});
+        }
 
         _showMessage('Vehicle photo updated successfully', isError: false);
       } else {
