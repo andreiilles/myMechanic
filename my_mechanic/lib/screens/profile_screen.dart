@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/platform_utils.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
@@ -172,37 +173,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 3,
                       ),
                     ),
-                    child: Icon(
-                      PlatformUtils.isIOS 
-                          ? CupertinoIcons.person_fill 
-                          : Icons.person,
-                      size: 60,
-                      color: Theme.of(context).primaryColor.withOpacity(0.7),
+                    child: ClipOval(
+                      child: user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty
+                          ? Image.network(
+                              user.profileImageUrl!,
+                              key: ValueKey(user.profileImageUrl),
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: PlatformUtils.isIOS
+                                      ? const CupertinoActivityIndicator()
+                                      : const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  PlatformUtils.isIOS 
+                                      ? CupertinoIcons.person_fill 
+                                      : Icons.person,
+                                  size: 60,
+                                  color: Theme.of(context).primaryColor.withOpacity(0.7),
+                                );
+                              },
+                            )
+                          : Icon(
+                              PlatformUtils.isIOS 
+                                  ? CupertinoIcons.person_fill 
+                                  : Icons.person,
+                              size: 60,
+                              color: Theme.of(context).primaryColor.withOpacity(0.7),
+                            ),
                     ),
                   ),
                   if (_isEditing)
                     Positioned(
                       bottom: 0,
                       right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          PlatformUtils.isIOS 
-                              ? CupertinoIcons.camera_fill 
-                              : Icons.camera_alt,
-                          size: 20,
-                          color: Colors.white,
+                      child: GestureDetector(
+                        onTap: () => _showImageOptions(userProvider),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            PlatformUtils.isIOS 
+                                ? CupertinoIcons.camera_fill 
+                                : Icons.camera_alt,
+                            size: 20,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -414,6 +447,164 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: Text(message),
           backgroundColor: isError ? Colors.red : Colors.green,
         ),
+      );
+    }
+  }
+
+  Future<void> _showImageOptions(UserProvider userProvider) async {
+    final user = userProvider.currentUser;
+    if (user == null) return;
+
+    if (PlatformUtils.isIOS) {
+      showCupertinoModalPopup(
+        context: context,
+        builder: (context) => CupertinoActionSheet(
+          title: const Text('Profile Photo'),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera, userProvider);
+              },
+              child: const Text('Take Photo'),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery, userProvider);
+              },
+              child: const Text('Choose from Gallery'),
+            ),
+            if (user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
+              CupertinoActionSheetAction(
+                isDestructiveAction: true,
+                onPressed: () {
+                  Navigator.pop(context);
+                  _removeImage(userProvider);
+                },
+                child: const Text('Remove Photo'),
+              ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera, userProvider);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery, userProvider);
+              },
+            ),
+            if (user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removeImage(userProvider);
+                },
+              ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source, UserProvider userProvider) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+      if (!mounted) return;
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => PopScope(
+          canPop: false,
+          child: PlatformUtils.isIOS
+              ? const CupertinoAlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CupertinoActivityIndicator(),
+                      SizedBox(height: 16),
+                      Text('Uploading image...'),
+                    ],
+                  ),
+                )
+              : const AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Uploading image...'),
+                    ],
+                  ),
+                ),
+        ),
+      );
+
+      final success = await userProvider.uploadProfileImage(pickedFile.path);
+
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Close loading
+
+      if (success) {
+        _showMessage('Profile photo updated successfully', isError: false);
+      } else {
+        _showMessage(
+          userProvider.error ?? 'Failed to upload image',
+          isError: true,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          Navigator.of(context, rootNavigator: true).pop();
+        } catch (_) {}
+        _showMessage('Failed to pick image: $e', isError: true);
+      }
+    }
+  }
+
+  Future<void> _removeImage(UserProvider userProvider) async {
+    final success = await userProvider.removeProfileImage();
+    
+    if (!mounted) return;
+
+    if (success) {
+      _showMessage('Profile photo removed', isError: false);
+    } else {
+      _showMessage(
+        userProvider.error ?? 'Failed to remove image',
+        isError: true,
       );
     }
   }
